@@ -1,0 +1,956 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BPA ECS Integrated Development Guide v2.0</title>
+<style>
+:root{
+  --bg:#0b1020;
+  --panel:#121933;
+  --panel2:#182145;
+  --line:#2d3a73;
+  --text:#ecf1ff;
+  --muted:#b9c6ef;
+  --accent:#6aa7ff;
+  --accent2:#7ee0c0;
+  --warn:#ffd166;
+  --danger:#ff7b7b;
+  --ok:#6fe3a1;
+  --code:#0f1430;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,Segoe UI,Apple SD Gothic Neo,Malgun Gothic,sans-serif;background:linear-gradient(180deg,#0a1022,#111933 26%,#0f152a 100%);color:var(--text);line-height:1.65}
+a{color:#9ac2ff;text-decoration:none}
+.container{display:grid;grid-template-columns:320px 1fr;gap:24px;max-width:1600px;margin:0 auto;padding:24px}
+.sidebar{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:20px;background:rgba(10,14,28,.88);backdrop-filter:blur(10px);border-right:1px solid rgba(255,255,255,.08)}
+.sidebar h1{font-size:22px;line-height:1.25;margin:0 0 8px}
+.sidebar .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.sidebar nav a{display:block;padding:8px 10px;border-radius:10px;color:var(--muted);font-size:14px}
+.sidebar nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.content{padding:12px 8px 80px}
+.hero{padding:28px;border:1px solid var(--line);background:linear-gradient(135deg,rgba(106,167,255,.14),rgba(126,224,192,.08));border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.hero h2{font-size:34px;line-height:1.15;margin:0 0 8px}
+.hero p{color:var(--muted);max-width:1150px}
+.grid{display:grid;gap:16px}
+.grid.kpi{grid-template-columns:repeat(4,1fr);margin-top:18px}
+.card{background:rgba(18,25,51,.9);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.card h3,.card h4{margin-top:0}
+.kpi .card{padding:16px}
+.kpi .n{font-size:28px;font-weight:800}
+.kpi .l{color:var(--muted);font-size:13px}
+section{margin-top:28px}
+section>h2{margin:0 0 12px;font-size:28px}
+section>p.lead{color:var(--muted);margin-top:-2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+table{width:100%;border-collapse:collapse;background:rgba(9,13,30,.55);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+th{background:rgba(255,255,255,.05);text-align:left}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.p1{background:rgba(255,123,123,.18);color:#ffd7d7}
+.badge.p2{background:rgba(255,209,102,.16);color:#ffe6a0}
+.badge.p3{background:rgba(106,167,255,.18);color:#cfe2ff}
+.badge.ok{background:rgba(111,227,161,.16);color:#d5ffe5}
+.badge.note{background:rgba(126,224,192,.16);color:#d6fff3}
+ul.tight li{margin:4px 0}
+pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre{margin:0;padding:16px;background:var(--code);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto;color:#dfe8ff}
+.callout{padding:16px 18px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
+.callout.warn{border-color:rgba(255,209,102,.35);background:rgba(255,209,102,.08)}
+.callout.danger{border-color:rgba(255,123,123,.35);background:rgba(255,123,123,.08)}
+.callout.ok{border-color:rgba(111,227,161,.35);background:rgba(111,227,161,.08)}
+.callout .title{font-weight:800;margin-bottom:6px}
+.flow{display:grid;gap:10px}
+.step{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:start;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.step .num{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#99c2ff);color:#07101f;display:flex;align-items:center;justify-content:center;font-weight:900}
+.arch{display:grid;gap:12px}
+.arch .layer{padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.arch .layer strong{display:block;font-size:18px}
+.small{font-size:13px;color:var(--muted)}
+hr.sep{border:none;border-top:1px solid rgba(255,255,255,.08);margin:20px 0}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+@media (max-width:1200px){
+  .container{grid-template-columns:1fr}
+  .sidebar{position:relative;height:auto;border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .grid.kpi,.four,.three,.two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <aside class="sidebar">
+    <h1>BPA ECS 통합 개발 가이드 v2.0</h1>
+    <div class="sub">설계서 + ICD + Message Spec + Proto + SQL + Kafka + SIT 통합 구현판</div>
+    <nav>
+      <a href="#summary">1. 문서 목적</a>
+      <a href="#source-pack">2. 기준 문서 패키지</a>
+      <a href="#executive">3. 개발 착수 핵심 요약</a>
+      <a href="#principles">4. 비가역 설계 원칙</a>
+      <a href="#architecture">5. 시스템/배포 아키텍처</a>
+      <a href="#repo">6. 저장소/패키지 구조</a>
+      <a href="#domain">7. 정규화 도메인 모델</a>
+      <a href="#message">8. 메시지 표준화 규칙</a>
+      <a href="#interfaces">9. 외부/내부 인터페이스 지도</a>
+      <a href="#scheduler">10. Task Scheduler 구현</a>
+      <a href="#state">11. State Manager 구현</a>
+      <a href="#dispatcher">12. Dispatcher 구현</a>
+      <a href="#orchestrator">13. Orchestrator 구현</a>
+      <a href="#adapters">14. Protocol Adapter 구현</a>
+      <a href="#extensions">15. Extension Service 구현</a>
+      <a href="#scenario-ds">16. DS 구현 절차</a>
+      <a href="#scenario-ld">17. LD 구현 절차</a>
+      <a href="#scenario-gi-go">18. GI/GO/GC 구현 절차</a>
+      <a href="#replan">19. Replan / Rescue / Timeout</a>
+      <a href="#data">20. DB / Redis / Kafka / Outbox</a>
+      <a href="#security">21. 보안 / 감사 / 관측성</a>
+      <a href="#build-order">22. 실제 개발 순서</a>
+      <a href="#test">23. SIT / SAT 가이드</a>
+      <a href="#deliverables">24. 산출물 패키지와 승인 기준</a>
+      <a href="#appendix-a">부록 A. Canonical DTO</a>
+      <a href="#appendix-b">부록 B. gRPC / Internal API Draft</a>
+      <a href="#appendix-c">부록 C. Topic / Table Mapping</a>
+      <a href="#appendix-d">부록 D. Error Code Catalog</a>
+      <a href="#appendix-e">부록 E. 개발 체크리스트</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <section id="summary" class="hero">
+      <h2>모든 설계 문서를 하나의 “실제 개발 문서”로 통합한 OpenSG 구현 기준서</h2>
+      <p>
+        본 문서는 BPA ECS 아키텍처/기능정의/Core 상세설계/Biz Flow/장비 인터페이스 정의서와, 이후 보강된
+        ICD, Message Field Spec, Developer Guide, proto, PostgreSQL DDL, Kafka Event Schema, SIT Test Book을
+        하나의 구현 기준으로 재구성한 통합 개발 가이드다. 목표는 개발자가 문서를 넘겨받은 즉시
+        <strong>패키지 구조 → DTO/스키마 → 서비스 구현 → 장비 연동 → 통합시험</strong>까지 일관된 방식으로 진행하도록 만드는 것이다.
+      </p>
+      <div class="grid kpi">
+        <div class="card"><div class="n">4</div><div class="l">Core 고정 컴포넌트<br/>Task Scheduler / Dispatcher / State Manager / Orchestrator</div></div>
+        <div class="card"><div class="n">5</div><div class="l">Extension Service<br/>Gate / OCR / LSTP / Reefer / BMS</div></div>
+        <div class="card"><div class="n">9</div><div class="l">핵심 Kafka Topic<br/>telemetry / lifecycle / progress / alarm / replan 등</div></div>
+        <div class="card"><div class="n">10+</div><div class="l">필수 구현 축<br/>Interface / DTO / DB / Redis / Kafka / Simulator / SIT</div></div>
+      </div>
+    </section>
+
+    <section id="source-pack">
+      <h2>2. 기준 문서 패키지</h2>
+      <p class="lead">이 가이드는 아래 문서를 상호 교차 검증해 통합했다. 구현 시 문서 우선순위도 함께 명시한다.</p>
+      <div class="card">
+        <table>
+          <thead><tr><th>문서군</th><th>문서</th><th>주 역할</th><th>구현 우선순위</th></tr></thead>
+          <tbody>
+            <tr><td>상위 설계</td><td>ECS_SystemArchitecture_v1.5</td><td>경계, 5-Layer, 프로토콜/Topic 원칙, HA</td><td>원칙 기준</td></tr>
+            <tr><td>상세 설계</td><td>ECS_Core_ModuleDesign_v1.5</td><td>Core 모델, 상태머신, DS/GI/GO phase, replan</td><td>Core 구현 기준</td></tr>
+            <tr><td>기능정의</td><td>ECS_FunctionDefinition_v1.5</td><td>기능 ID, 우선순위, 완료 규칙, anomaly 정의</td><td>요구사항 기준</td></tr>
+            <tr><td>운영 플로우</td><td>BPA_ECS_Biz_flow_v0.3</td><td>시나리오 sequence 흐름</td><td>테스트 기준</td></tr>
+            <tr><td>장비 인터페이스</td><td>TOS/ECS, TOS-FMS, ARMG, STS xlsx</td><td>실제 필드, 코드셋, 메시지 방향</td><td>필드 기준 최우선</td></tr>
+            <tr><td>보강 문서</td><td>ICD / Message Field Spec / Developer Guide</td><td>계약/표준/실행 순서 보강</td><td>개발 착수 기준</td></tr>
+            <tr><td>구현 패키지</td><td>proto / SQL / Kafka Schema / SIT Book</td><td>코드화/배포/검증 기준</td><td>코드 생성 기준</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn" style="margin-top:16px">
+        <div class="title">문서 충돌 시 우선순위</div>
+        벤더 xlsx 인터페이스 정의서의 필드/코드셋 → Message Field Spec의 canonical 매핑 → ICD의 계약 규칙 → Core/Architecture 설계 문서 순으로 적용한다.
+        단, Core 내부 gRPC / Internal API / DB / Kafka는 이 통합 가이드를 최종 기준으로 사용한다.
+      </div>
+    </section>
+
+    <section id="executive">
+      <h2>3. 개발 착수 핵심 요약</h2>
+      <div class="three">
+        <div class="card">
+          <h3>가장 먼저 할 일</h3>
+          <ul class="tight">
+            <li>Canonical DTO / Enum / Validation library 확정</li>
+            <li>gRPC proto 및 Internal API stub 생성</li>
+            <li>PostgreSQL DDL / Redis key / Kafka topic 생성</li>
+            <li>FMS/STS/ARMG simulator 뼈대부터 준비</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>절대 흔들리면 안 되는 것</h3>
+          <ul class="tight">
+            <li>Core는 4개로 고정</li>
+            <li>Adapter는 비즈니스 로직 금지</li>
+            <li>Kafka는 제어 명령 금지</li>
+            <li>GI/GO는 DTQC·AGV 미사용</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>가장 늦게 붙여도 되는 것</h3>
+          <ul class="tight">
+            <li>UI 고급 시각화</li>
+            <li>KPI 집계 대시보드</li>
+            <li>Reefer/BMS 고도화</li>
+            <li>고급 운영 리포트</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="principles">
+      <h2>4. 비가역 설계 원칙</h2>
+      <div class="four">
+        <div class="card"><h3>Core 4개만 유지</h3><p>Task Scheduler, Dispatcher M1, State Manager M2, Orchestrator M3만 Core다. Gate/OCR/LSTP/Reefer/BMS는 항상 Extension으로 분리한다.</p></div>
+        <div class="card"><h3>Adapter는 무상태 변환기</h3><p>연결, 재연결, raw payload 보존, Canonical Event 변환만 수행한다. 완료 판정, 취소 분기, 재배차 판단은 금지한다.</p></div>
+        <div class="card"><h3>Kafka는 이력/전파 전용</h3><p>장비 지시는 gRPC/SDK/Adapter를 통한 동기 경로로만 보낸다. Kafka는 outbox 기반 비즈니스 이벤트와 read model에만 사용한다.</p></div>
+        <div class="card"><h3>완료는 이중 확인</h3><p>한쪽 신호만으로 완료 금지. DS/LD/GI/GO/MI/MO/RH/AH 모두 완료 증거 집합이 충족되어야 CM-JR001을 보낸다.</p></div>
+      </div>
+      <div class="callout danger" style="margin-top:16px">
+        <div class="title">구현 금지 목록</div>
+        <ul class="tight">
+          <li>UI가 STS/ARMG/FMS 장비 API를 직접 호출하는 구조</li>
+          <li>Adapter 내부에서 C02 허가, OCR 판정, Replan 분기 수행</li>
+          <li>AT-MR002, S01-ARPT 고주기 이벤트를 동기 DB INSERT만으로 처리하는 구조</li>
+          <li>장비 원문 필드명을 Core 내부 도메인 모델의 영구 이름으로 그대로 사용하는 구조</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>5. 시스템/배포 아키텍처</h2>
+      <div class="arch">
+        <div class="layer"><strong>Layer 1. Connectivity</strong> DTQC OPC-UA, ARMG OPC-UA, FMS MQTT, TOS REST, Gate REST. 연결관리/보안/원문로그 담당.</div>
+        <div class="layer"><strong>Layer 2. Application</strong> Core 4개 + Extension Service. 모든 업무 판단은 여기서만 수행.</div>
+        <div class="layer"><strong>Layer 3. Event Backbone</strong> Kafka KRaft. equipment.telemetry, task.lifecycle, job.progress, alarm.events, replan.events, dashboard.readmodel, ecs.gate.transaction, ecs.ocr.result, ecs.audit.log.</div>
+        <div class="layer"><strong>Layer 4. Storage & Observability</strong> PostgreSQL 16, Redis 7.2, Prometheus, Grafana, ELK, OpenTelemetry.</div>
+        <div class="layer"><strong>Layer 5. Presentation</strong> 운영 UI는 Read Model과 승인된 Core API만 사용.</div>
+      </div>
+      <div class="two" style="margin-top:16px">
+        <div class="card">
+          <h3>통신 주기/프로토콜</h3>
+          <table>
+            <thead><tr><th>연계</th><th>프로토콜</th><th>주기/방식</th><th>비고</th></tr></thead>
+            <tbody>
+              <tr><td>TOS</td><td>REST/JSON-RPC</td><td>Event</td><td>CM-JS001 / CM-JR001</td></tr>
+              <tr><td>DTQC/STS</td><td>OPC-UA</td><td>100ms Subscribe + Method Call</td><td>J02~J05, C02, S01, QC-JR</td></tr>
+              <tr><td>ARMG</td><td>OPC-UA</td><td>100ms Subscribe + Method Call</td><td>J01~J07, C02, S01, YC-JR</td></tr>
+              <tr><td>FMS</td><td>MQTT</td><td>200~500ms</td><td>AT-JS001/2/3, AT-JR001, MR001/2/3</td></tr>
+              <tr><td>Gate/OCR</td><td>REST</td><td>Event</td><td>Extension 경유</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>QoS 원칙</h3>
+          <ul class="tight">
+            <li>QoS 2: AT-JS001/002/003 같은 작업 지시</li>
+            <li>QoS 1: AT-JR001, AT-MR001 같은 상태 변화</li>
+            <li>QoS 0: AT-MR002 위치 같은 손실 허용 고주기 데이터</li>
+            <li>OPC-UA는 subscription raw payload를 audit log에 원본 보존</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="repo">
+      <h2>6. 저장소/패키지 구조</h2>
+      <div class="card">
+<pre>ecs/
+├─ core/
+│  ├─ task-scheduler/
+│  ├─ dispatcher/
+│  ├─ state-manager/
+│  ├─ orchestrator/
+│  └─ common-domain/
+│     ├─ dto/
+│     ├─ enum/
+│     ├─ validation/
+│     ├─ location/
+│     ├─ errors/
+│     └─ observability/
+├─ adapters/
+│  ├─ tos-rest-adapter/
+│  ├─ gate-rest-adapter/
+│  ├─ fms-mqtt-adapter/
+│  ├─ dtqc-opcua-adapter/
+│  └─ armg-opcua-adapter/
+├─ extensions/
+│  ├─ gate-service/
+│  ├─ ocr-service/
+│  ├─ lstp-service/
+│  ├─ reefer-service/
+│  └─ bms-service/
+├─ platform/
+│  ├─ proto/
+│  ├─ db/
+│  ├─ kafka/
+│  ├─ helm/
+│  └─ simulators/
+└─ docs/</pre>
+      </div>
+      <div class="three" style="margin-top:16px">
+        <div class="card"><h3>공통 모듈 필수</h3><p>Location, EquipmentState, ProgressEvent, HandshakeEvent, ErrorCode, OutboxEvent, CompletionEvidence를 shared common-domain에 둔다.</p></div>
+        <div class="card"><h3>모듈 경계</h3><p>core는 adapter 구체 클래스에 직접 의존하지 않고 port/interface로만 연결한다.</p></div>
+        <div class="card"><h3>배포 단위</h3><p>Core 4개와 Adapter/Extension은 각각 독립 deployment로 분리하고 개별 autoscale 가능해야 한다.</p></div>
+      </div>
+    </section>
+
+    <section id="domain">
+      <h2>7. 정규화 도메인 모델</h2>
+      <div class="two">
+        <div class="card">
+          <h3>Internal Task</h3>
+          <table>
+            <thead><tr><th>필드</th><th>설명</th></tr></thead>
+            <tbody>
+              <tr><td>task_id</td><td>ECS 내부 UUID</td></tr>
+              <tr><td>wi_ref</td><td>CM-JS001.containerWiRef, 멱등 기준</td></tr>
+              <tr><td>job_tp</td><td>DS / LD / GI / GO / GC / MI / MO / RH / AH</td></tr>
+              <tr><td>task_type</td><td>QC_MAIN / QC_PORTAL / AGV / ARMG_AGV / ARMG_GATE_IN / ARMG_GATE_OUT / ARMG_YARD</td></tr>
+              <tr><td>status</td><td>PENDING → VALIDATED → SCHEDULED → AGV_ASSIGNED 또는 XT_PENDING → IN_PROGRESS → COMPLETED</td></tr>
+              <tr><td>assigned_qc_id / agv_id / armg_id</td><td>배정 결과</td></tr>
+              <tr><td>truck_id</td><td>GI/GO/GC 필수</td></tr>
+              <tr><td>appointment_time</td><td>GO 사전배치 기준</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Job Order</h3>
+          <table>
+            <thead><tr><th>필드</th><th>설명</th></tr></thead>
+            <tbody>
+              <tr><td>job_id</td><td>장비 작업 UUID</td></tr>
+              <tr><td>task_id</td><td>상위 Internal Task FK</td></tr>
+              <tr><td>eqp_no / eqp_type</td><td>DTQC / ARMG / AGV</td></tr>
+              <tr><td>msg_no</td><td>J02-TODR, J06-TODR, AT-JS001 등</td></tr>
+              <tr><td>msg_id / cmd_id</td><td>메시지 식별자 / 장비 추적 식별자</td></tr>
+              <tr><td>job_status</td><td>SENT / ACCEPTED / IN_PROGRESS / COMPLETED / FAILED / CANCELLED</td></tr>
+              <tr><td>retry_count</td><td>초과 시 manual intervention</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Completion Evidence</h3>
+        <p>시나리오별 완료 이중확인을 위해 Orchestrator는 아래 증거 객체를 관리한다.</p>
+<pre>{
+  "task_id": "uuid",
+  "scenario": "DS",
+  "evidence": {
+    "qc_jr005": true,
+    "j04_arpt_6c": true,
+    "load_cell": true,
+    "yc_jr005": true,
+    "at_jr001_complete": true
+  },
+  "is_complete": true
+}</pre>
+      </div>
+    </section>
+
+    <section id="message">
+      <h2>8. 메시지 표준화 규칙</h2>
+      <div class="three">
+        <div class="card">
+          <h3>외부 필드명</h3>
+          <p>벤더 원문 유지. 예: <code>CNTR_NO</code>, <code>taskNo</code>, <code>locTp</code>, <code>ITV_XT_NO</code>.</p>
+        </div>
+        <div class="card">
+          <h3>내부 필드명</h3>
+          <p>DB / DTO / Event는 snake_case 통일. 예: <code>cntr_no</code>, <code>task_no</code>, <code>truck_id</code>.</p>
+        </div>
+        <div class="card">
+          <h3>시간 타입</h3>
+          <p>외부는 문자열 timestamp, 내부는 UTC <code>timestamptz</code> / ISO-8601로 표준화한다.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>공통 Envelope</h3>
+<pre>{
+  "head": {
+    "msgId": "uuid",
+    "evntTp": "WI_NEW | UPDATE | COMPLETE | CANCEL ...",
+    "timeStamp": "yyyy-MM-dd HH:mm:ss.SSS",
+    "remark": null
+  },
+  "body": { }
+}</pre>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Canonical Mapping 예시</h3>
+        <table>
+          <thead><tr><th>외부</th><th>내부</th><th>규칙</th></tr></thead>
+          <tbody>
+            <tr><td>containerWiRef</td><td>wi_ref</td><td>WI 멱등/업데이트 기준키</td></tr>
+            <tr><td>cntrNo</td><td>cntr_no</td><td>[A-Z]{4}[0-9]{7} 검증</td></tr>
+            <tr><td>jobTp</td><td>job_tp</td><td>허용값 DS/LD/GI/GO/GC/MI/MO/RH/AH</td></tr>
+            <tr><td>fromSlot / toSlot</td><td>from_loc / to_loc</td><td>locTp.loc1.loc2.loc3.loc4 분해</td></tr>
+            <tr><td>ITV_XT_NO</td><td>truck_id 또는 agv_id</td><td>ARMG C02에서는 AGV/XT 구분 로직 적용</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="interfaces">
+      <h2>9. 외부/내부 인터페이스 지도</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>Endpoint / Message</th><th>방향</th><th>호출 주체</th><th>핵심 필드</th><th>성공 조건</th></tr></thead>
+          <tbody>
+            <tr><td>/common/setWorkInstruction (CM-JS001)</td><td>TOS → ECS</td><td>TOS-Adapter</td><td>containerWiRef, jobTp, cntrNo, pointOfWork/truckId</td><td>200 또는 202, 비동기 처리 시작</td></tr>
+            <tr><td>/common/syncWorkInstruction (CM-JR001)</td><td>ECS → TOS</td><td>Orchestrator/TOS-Adapter</td><td>msgId, result context</td><td>1회만 송신</td></tr>
+            <tr><td>/core/wi/process</td><td>Gate → ECS</td><td>Gate Service</td><td>GI/GO canonical WI</td><td>검증 통과 후 task 생성</td></tr>
+            <tr><td>/core/xt/arrived</td><td>Gate → ECS</td><td>Gate Service</td><td>truckId, lstpSlot</td><td>task가 XT_PENDING 상태여야 함</td></tr>
+            <tr><td>/core/ocr/result</td><td>OCR → ECS</td><td>OCR Service</td><td>cmd_id, expected/recognized_cntr_no, confidence_pct</td><td>MATCH 또는 수동확인 흐름</td></tr>
+            <tr><td>AT-JS001/2/3</td><td>ECS → FMS</td><td>Orchestrator/FMS Adapter</td><td>taskNo, atId, taskType</td><td>QoS2 exactly-once</td></tr>
+            <tr><td>J02~J07 TODR</td><td>ECS → STS/ARMG</td><td>Orchestrator/OPCUA Adapter</td><td>EQP_NO, CMD_ID, 위치/컨테이너</td><td>Method call accept</td></tr>
+            <tr><td>C02-AODR/TRPT</td><td>장비 ↔ ECS</td><td>OPCUA Adapter</td><td>EQP_NO, CMD_ID, ITV_XT_NO</td><td>허가 판단 후 응답</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="scheduler">
+      <h2>10. Task Scheduler 구현</h2>
+      <div class="flow">
+        <div class="step"><div class="num">1</div><div><strong>입력 수렴</strong><br/>TOS CM-JS001, Gate /core/wi/process를 공통 WorkInstructionIngestFacade로 수렴시킨다.</div></div>
+        <div class="step"><div class="num">2</div><div><strong>정합성 검증</strong><br/>containerWiRef 중복, jobTp, cntrNo, pointOfWork, truckId, slot 포맷, cargoType H/DG, cntrLen 등을 검증한다.</div></div>
+        <div class="step"><div class="num">3</div><div><strong>Internal Task 생성</strong><br/>jobTp별 task_type 생성. WI_NEW/UPDATE/CANCEL 분기와 상태별 위임 규칙을 분리한다.</div></div>
+        <div class="step"><div class="num">4</div><div><strong>우선순위 점수</strong><br/>priority_score=(WI.priority×1000)+(출항잔여시간역수×100)을 계산해 Redis Sorted Set task_queue에 저장한다.</div></div>
+        <div class="step"><div class="num">5</div><div><strong>Event 발행</strong><br/>task.lifecycle CREATED / VALIDATION_FAILED를 outbox로 적재한다.</div></div>
+        <div class="step"><div class="num">6</div><div><strong>배차 요청</strong><br/>Dispatcher.RequestAssignment 호출 후 task를 SCHEDULED로 전환한다.</div></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+<pre>WorkInstructionController
+  -> WorkInstructionMapper
+  -> ValidationService
+  -> InternalTaskFactory
+  -> PriorityScoreCalculator
+  -> TaskRepository
+  -> TaskQueuePort (Redis)
+  -> TaskAssignmentServiceClient (gRPC)
+  -> OutboxPublisher</pre>
+      </div>
+    </section>
+
+    <section id="state">
+      <h2>11. State Manager 구현</h2>
+      <div class="two">
+        <div class="card">
+          <h3>핵심 책임</h3>
+          <ul class="tight">
+            <li>S01-ARPT, J0x-ARPT, QC/YC-JR, AT-MR001/002/003 수신 정규화</li>
+            <li>Redis SSOT 유지</li>
+            <li>통신단절/장비Fault/AGVFault/Zone 혼잡도 감지</li>
+            <li>Dispatcher, Orchestrator의 상태 질의 응답</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Redis Key</h3>
+          <ul class="tight">
+            <li><code>equipment:dtqc:{eqp_no}</code> TTL 60s</li>
+            <li><code>equipment:armg:{eqp_no}</code> TTL 60s</li>
+            <li><code>equipment:agv:{at_id}</code> TTL 60s</li>
+            <li><code>equipment:agv:{at_id}.loc</code> TTL 10s</li>
+            <li><code>reefer:{cntr_no}</code> TTL 30m</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Anomaly Rules</h3>
+        <table>
+          <thead><tr><th>코드</th><th>조건</th><th>조치</th></tr></thead>
+          <tbody>
+            <tr><td>T-COMM</td><td>S01-ARPT 미수신 10초 초과</td><td>CRITICAL alarm + unsafe progression block</td></tr>
+            <tr><td>T-01</td><td>DTQC/ARMG EQP_STS = TB</td><td>Replan trigger</td></tr>
+            <tr><td>T-02</td><td>AGV workable=N 일반 fault</td><td>일반 재배차</td></tr>
+            <tr><td>T-03/T-04</td><td>AGV rescue 상황</td><td>Rescue Protocol</td></tr>
+            <tr><td>T-05</td><td>|ETW-ETA| > 60s</td><td>ETA drift replan</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="dispatcher">
+      <h2>12. Dispatcher 구현</h2>
+      <div class="callout ok">
+        <div class="title">Dispatcher는 “장비 선택”만 담당한다</div>
+        작업 흐름을 만들지 않는다. 어떤 QC/AGV/ARMG 조합이 가장 적절한지만 결정해 Orchestrator에 전달한다.
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>ETW / ETA 계산</h3>
+<pre>ETW = now + (avg_cycle_time_sec * remain_ratio) + ETW_BUFFER_SEC
+remain_ratio = 1 - (current_phase_progress / total_phases)
+
+congestion_factor = zone_occupancy > 0.8 ? 1.4 : 1.2
+ETA = now + (path_distance / agv_speed) * congestion_factor
+if battery_pct < 30:
+    ETA += 60 seconds</pre>
+      </div>
+      <div class="two" style="margin-top:16px">
+        <div class="card">
+          <h3>선정 규칙</h3>
+          <ul class="tight">
+            <li><strong>DS/LD</strong>: DTQC + AGV + ARMG 조합</li>
+            <li><strong>GI/GO</strong>: ARMG만 선정</li>
+            <li><strong>AGV</strong>: at_on=Y, workable=Y, battery_status != EMERGENCY</li>
+            <li><strong>DTQC</strong>: pointOfWork 일치, wkr_sts=Y, exe_mod=A, eqp_ctl_mod=A, hoist_sts=SH, eqp_sts not in TB/OF</li>
+            <li><strong>ARMG</strong>: 담당 block 일치, wkr_sts=Y, exe_mod=A, eqp_sts not in TB/OF</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>판정 규칙</h3>
+          <ul class="tight">
+            <li>|ETW-ETA| ≤ 30초: 확정</li>
+            <li>ETW &lt; ETA: 더 빠른 AGV 재탐색</li>
+            <li>ETW &gt; ETA: AGV 선대기 허용, ETA drift 감시</li>
+            <li>배터리 30% 미만: ETA +60초</li>
+            <li>Zone 점유율 0.8 초과: congestion factor 상향</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="orchestrator">
+      <h2>13. Orchestrator 구현</h2>
+      <div class="three">
+        <div class="card"><h3>역할</h3><p>Job 분해, 장비 지시 발행, Handshake 처리, 완료 이중 확인, Replan/Rescue, CM-JR001 송신.</p></div>
+        <div class="card"><h3>핵심 구성요소</h3><p>ScenarioStateMachine, HandshakeRouter, CompletionGuard, CommandBuilder, ReplanEngine, RecoveryTimer.</p></div>
+        <div class="card"><h3>금지사항</h3><p>장비 raw payload parsing을 직접 하지 않는다. Adapter가 준 Canonical Event만 사용한다.</p></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>완료 이중확인 규칙</h3>
+        <table>
+          <thead><tr><th>시나리오</th><th>완료 증거</th></tr></thead>
+          <tbody>
+            <tr><td>DS Quay</td><td>QC-JR005 + J04-ARPT 6C + LoadCell</td></tr>
+            <tr><td>DS Yard</td><td>YC-JR005 + AT-JR001 COMPLETE</td></tr>
+            <tr><td>LD Quay</td><td>QC-JR005 + J05-ARPT 6C</td></tr>
+            <tr><td>GI</td><td>YC-JR005 + J06-ARPT 6C + OCR MATCH</td></tr>
+            <tr><td>GO</td><td>YC-JR005 + J05-ARPT 6C</td></tr>
+            <tr><td>MI/MO/RH/AH</td><td>YC-JR005 + J01-ARPT 6C</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Handshake Router</h3>
+<pre>if source == DTQC:
+    route = AGV_HANDSHAKE_AT_STS
+elif source == ARMG and ITV_XT_NO matches AGV pattern:
+    route = AGV_HANDSHAKE_AT_ARMG
+elif source == ARMG and ITV_XT_NO matches truck pattern:
+    route = XT_HANDSHAKE
+else:
+    raise CRITICAL</pre>
+      </div>
+    </section>
+
+    <section id="adapters">
+      <h2>14. Protocol Adapter 구현</h2>
+      <div class="two">
+        <div class="card">
+          <h3>DTQC / ARMG OPC-UA Adapter</h3>
+          <ul class="tight">
+            <li>ECS는 OPC-UA Client, 장비는 Server</li>
+            <li>Subscribe 주기 100ms</li>
+            <li>재연결 3000ms 지수 백오프, max retry 10</li>
+            <li>NodeId: <code>ns=1;s=DTQC.{EQP_NO}.{field}</code>, <code>ns=1;s=ARMG.{EQP_NO}.{field}</code></li>
+            <li>raw payload는 <code>ecs.audit.log</code> 발행</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>FMS MQTT Adapter</h3>
+          <ul class="tight">
+            <li>Broker: EMQX 5.x, TLS 필수</li>
+            <li><code>ecs/agv/{atId}/task/send</code> QoS2</li>
+            <li><code>agv/{atId}/task/status</code> QoS1</li>
+            <li><code>agv/{atId}/location</code> QoS0</li>
+            <li>QoS1 duplicate는 idempotent merge 처리</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Adapter 공통 체크리스트</h3>
+        <ul class="tight">
+          <li>raw request/response와 canonical event를 둘 다 저장</li>
+          <li>msgId/cmdId/correlation_id를 유지</li>
+          <li>invalid payload는 버리지 말고 audit + alarm 후 DLQ 또는 quarantine queue로 이동</li>
+          <li>Core에 전달하는 이벤트는 장비별 구조가 아닌 canonical 구조여야 한다</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="extensions">
+      <h2>15. Extension Service 구현</h2>
+      <div class="three">
+        <div class="card">
+          <h3>Gate Service</h3>
+          <p>OCR, ISPS, 예약 검증 후 /core/wi/process 호출. GI/GO 완료 후 ECS-GATE001 clearance를 송신한다.</p>
+        </div>
+        <div class="card">
+          <h3>OCR Service</h3>
+          <p>GI 2L 시점에 OCR 검증. confidence 95% 이상이면 MATCH, 미달이면 2회 재촬영 후 수동확인.</p>
+        </div>
+        <div class="card">
+          <h3>LSTP / Reefer / BMS</h3>
+          <p>GO 슬롯 예약/해제, RF plug-in, 배터리 상태 갱신을 맡는다. 모두 Core API를 통해서만 연계한다.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Extension API 예시</h3>
+<pre>POST /core/wi/process
+POST /core/xt/arrived
+POST /core/ocr/result
+PUT  /core/dispatch/battery
+GET  /core/task/{taskId}</pre>
+      </div>
+    </section>
+
+    <section id="scenario-ds">
+      <h2>16. DS 구현 절차</h2>
+      <div class="flow">
+        <div class="step"><div class="num">1</div><div>CM-JS001(jobTp=DS) 수신 → WI 검증 → internal_task 생성</div></div>
+        <div class="step"><div class="num">2</div><div>Dispatcher가 pointOfWork DTQC + 최적 AGV + 담당 ARMG 선정</div></div>
+        <div class="step"><div class="num">3</div><div>Orchestrator Phase1: J02-TODR (QC Main Trolley)</div></div>
+        <div class="step"><div class="num">4</div><div>병렬로 AT-JS001(taskType=QCDS) 발행, AT-JR001 ARRIVE_LANE_ENTRY1 대기</div></div>
+        <div class="step"><div class="num">5</div><div>DTQC C02-AODR 수신 → C02-TRPT 허가 → J04-TODR 발행</div></div>
+        <div class="step"><div class="num">6</div><div>Quay 완료 증거: QC-JR005 + J04-ARPT 6C + LoadCell</div></div>
+        <div class="step"><div class="num">7</div><div>ARMG J07-AODR → C02-AODR(AGV) → C02-TRPT → J03-TODR</div></div>
+        <div class="step"><div class="num">8</div><div>Yard 완료 증거: YC-JR005 + AT-JR001 COMPLETE → CM-JR001 1회 송신</div></div>
+      </div>
+    </section>
+
+    <section id="scenario-ld">
+      <h2>17. LD 구현 절차</h2>
+      <div class="flow">
+        <div class="step"><div class="num">1</div><div>ARMG에서 AGV 상차를 위한 J02-TODR 또는 대응 ARMG phase 시작</div></div>
+        <div class="step"><div class="num">2</div><div>AGV YDPI / QCLD task 발행</div></div>
+        <div class="step"><div class="num">3</div><div>STS C02 handshake 처리 후 J05-TODR(STS portal) 발행</div></div>
+        <div class="step"><div class="num">4</div><div>STS main side phase 연계</div></div>
+        <div class="step"><div class="num">5</div><div>완료는 QC-JR005 + J05-ARPT 6C 충족 후 처리</div></div>
+      </div>
+    </section>
+
+    <section id="scenario-gi-go">
+      <h2>18. GI / GO / GC 구현 절차</h2>
+      <div class="two">
+        <div class="card">
+          <h3>GI</h3>
+          <ul class="tight">
+            <li>Gate가 OCR≥95% + ISPS + 예약 검증 완료 후 /core/wi/process 호출</li>
+            <li>Dispatcher는 ARMG만 배차</li>
+            <li>J07 재고조회 → XT 도착 대기(60분) → C02-AODR truckId 검증 → C02-TRPT → J06-TODR</li>
+            <li>2L 시점 OCR 결과 대기</li>
+            <li>완료: YC-JR005 + J06-ARPT 6C + OCR MATCH</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>GO / GC</h3>
+          <ul class="tight">
+            <li>GO는 appointment_time - 30분 시점에 LSTP reserve + J05-TODR preposition</li>
+            <li>4M 상태에서 XT 대기 후 /core/xt/arrived 수신</li>
+            <li>ARMG C02-AODR.ITV_XT_NO == WI.truckId 일치 시만 C02-TRPT</li>
+            <li>완료: YC-JR005 + J05-ARPT 6C, 이후 slot release</li>
+            <li>GC는 상태에 따라 즉시 취소 / C06-TODR / J01 복귀 분기</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="replan">
+      <h2>19. Replan / Rescue / Timeout</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>트리거</th><th>판정</th><th>행동</th></tr></thead>
+          <tbody>
+            <tr><td>EQP_STS = TB</td><td>장비 fault</td><td>기존 작업 중지, 대체장비 탐색, replan.events 발행</td></tr>
+            <tr><td>AGV workable=N before load</td><td>일반 재배차</td><td>AT-JS003 cancel → 다른 AGV 배차</td></tr>
+            <tr><td>AGV workable=N while loaded</td><td>Rescue</td><td>AT-JS002 안전구역 이동, TOS 통보, 300초 보호 대기</td></tr>
+            <tr><td>Handshake timeout</td><td>AGV 30초 / XT 60초</td><td>Rescue 또는 manual intervention</td></tr>
+            <tr><td>ARPT timeout</td><td>다음 phase ARPT 60초 미수신</td><td>재조회 또는 replan</td></tr>
+            <tr><td>ETA drift &gt; 60초</td><td>T-05</td><td>기존 AGV update/cancel 후 재배차</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="data">
+      <h2>20. DB / Redis / Kafka / Outbox</h2>
+      <div class="three">
+        <div class="card">
+          <h3>PostgreSQL</h3>
+          <ul class="tight">
+            <li>work_instruction</li>
+            <li>internal_task</li>
+            <li>job_order</li>
+            <li>task_phase_history</li>
+            <li>lstp_slot</li>
+            <li>ocr_result / gate_transaction</li>
+            <li>alarm_event / replan_log / outbox_event</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Redis</h3>
+          <ul class="tight">
+            <li>SSOT cache</li>
+            <li>task_queue Sorted Set</li>
+            <li>ephemeral timer state</li>
+            <li>GO preposition timer</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Kafka</h3>
+          <ul class="tight">
+            <li>equipment.telemetry</li>
+            <li>task.lifecycle</li>
+            <li>job.progress</li>
+            <li>alarm.events</li>
+            <li>replan.events</li>
+            <li>dashboard.readmodel</li>
+            <li>ecs.gate.transaction</li>
+            <li>ecs.ocr.result</li>
+            <li>ecs.audit.log</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Outbox 원칙</h3>
+<pre>1. 비즈니스 상태 변경과 outbox row insert를 같은 DB transaction으로 commit
+2. Outbox publisher가 Kafka publish 후 published_at 기록
+3. Consumer는 event_id 기준 멱등 처리
+4. 모든 business topic에 .dlq topic 제공</pre>
+      </div>
+    </section>
+
+    <section id="security">
+      <h2>21. 보안 / 감사 / 관측성</h2>
+      <div class="three">
+        <div class="card">
+          <h3>보안</h3>
+          <ul class="tight">
+            <li>REST TLS</li>
+            <li>AutoGate API Key + IP Whitelist</li>
+            <li>MQTT per-AGV 계정</li>
+            <li>OPC-UA certificate 검증</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>감사</h3>
+          <ul class="tight">
+            <li>Adapter raw payload 전부 ecs.audit.log 보존</li>
+            <li>msgId / cmdId / trace_id 유지</li>
+            <li>중복/오류 payload도 삭제하지 않음</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>관측성</h3>
+          <ul class="tight">
+            <li>OpenTelemetry trace id 전 구간 전달</li>
+            <li>Prometheus: queue depth, ARPT lag, handshake timeout</li>
+            <li>Grafana: scenario dashboard</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="build-order">
+      <h2>22. 실제 개발 순서</h2>
+      <div class="flow">
+        <div class="step"><div class="num">A1</div><div><strong>Canonical DTO / Enum / Validator</strong><br/>CM/AT/J/C02/S01 전체를 공통 모델로 표준화한다.</div></div>
+        <div class="step"><div class="num">A2</div><div><strong>Proto / SQL / Topic 생성</strong><br/>gRPC stub, DDL, Kafka topic, DLQ, outbox publisher를 먼저 만든다.</div></div>
+        <div class="step"><div class="num">A3</div><div><strong>State Manager + Adapter</strong><br/>실시간 상태 수집 기반이 먼저 있어야 Dispatcher/Orchestrator 구현이 가능하다.</div></div>
+        <div class="step"><div class="num">A4</div><div><strong>Task Scheduler</strong><br/>CM-JS001/WI validation/task queue/CANCEL/UPDATE 처리.</div></div>
+        <div class="step"><div class="num">A5</div><div><strong>Dispatcher</strong><br/>ETW/ETA, battery penalty, congestion, equipment filtering 구현.</div></div>
+        <div class="step"><div class="num">A6</div><div><strong>Orchestrator</strong><br/>DS/LD/GI/GO/GC state machine, CompletionGuard, HandshakeRouter 구현.</div></div>
+        <div class="step"><div class="num">A7</div><div><strong>Extension Services</strong><br/>Gate/OCR/LSTP/BMS/Reefer 순으로 붙인다.</div></div>
+        <div class="step"><div class="num">A8</div><div><strong>SIT → Fault Injection → Pre-SAT</strong><br/>정상 흐름보다 장애 흐름을 반드시 반복 검증한다.</div></div>
+      </div>
+    </section>
+
+    <section id="test">
+      <h2>23. SIT / SAT 가이드</h2>
+      <div class="two">
+        <div class="card">
+          <h3>SIT 환경 기준</h3>
+          <ul class="tight">
+            <li>Core 4개 + Adapter + Extension 전체 배포</li>
+            <li>STS/ARMG/FMS/TOS/Gate simulator</li>
+            <li>PostgreSQL / Redis / Kafka 격리 namespace</li>
+            <li>Prometheus / Grafana / ELK / OTel 준비</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>P1 필수 케이스</h3>
+          <ul class="tight">
+            <li>TS-VAL-001 Valid WI_NEW creates task</li>
+            <li>DIS-ASSIGN-001 DS assignment selects DTQC, AGV, ARMG</li>
+            <li>ORC-DS-001 DS happy path</li>
+            <li>ORC-LD-001 LD happy path</li>
+            <li>ORC-GI-001 GI with OCR MATCH</li>
+            <li>ORC-GO-001 GO preposition and completion</li>
+            <li>ORC-GC-001 GC cancel before 2L</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>장애 / 비기능 필수 케이스</h3>
+        <table>
+          <thead><tr><th>케이스</th><th>핵심 확인</th></tr></thead>
+          <tbody>
+            <tr><td>FAULT-001</td><td>S01-ARPT 10초 미수신 시 CRITICAL alarm + progression block</td></tr>
+            <tr><td>FAULT-003</td><td>ETA drift &gt; 60초 시 replan</td></tr>
+            <tr><td>FAULT-005</td><td>XT truck mismatch 시 C02-TRPT 거부 + manual block</td></tr>
+            <tr><td>EVENT-001</td><td>DB state와 outbox event 원자성</td></tr>
+            <tr><td>NFT-001</td><td>중복 MQTT status idempotent 처리</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="deliverables">
+      <h2>24. 산출물 패키지와 승인 기준</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>산출물</th><th>내용</th><th>승인 기준</th></tr></thead>
+          <tbody>
+            <tr><td>코드</td><td>Core/Adapter/Extension source + simulator</td><td>proto compile, unit pass, lint pass</td></tr>
+            <tr><td>DB/Infra</td><td>DDL, migration, topic script, helm</td><td>fresh env auto provisioning 가능</td></tr>
+            <tr><td>계약 문서</td><td>ICD, Message Field Spec, this integrated guide</td><td>field/code mismatch 0건</td></tr>
+            <tr><td>시험 산출물</td><td>SIT evidence, logs, traces, offsets, screenshots</td><td>P1 2회 연속 pass</td></tr>
+            <tr><td>운영 준비</td><td>runbook, alarm playbook, rollback procedure</td><td>field SAT 전 승인 완료</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="appendix-a">
+      <h2>부록 A. Canonical DTO</h2>
+      <div class="card">
+<pre>Location {
+  loc_tp: string
+  loc1: string
+  loc2: string
+  loc3: string
+  loc4: string
+}
+
+InternalTask {
+  task_id: uuid
+  wi_ref: string
+  cntr_no: string
+  job_tp: enum
+  task_type: enum
+  status: enum
+  point_of_work: string?
+  assigned_qc_id: string?
+  assigned_agv_id: string?
+  assigned_armg_id: string?
+  truck_id: string?
+  appointment_time: timestamp?
+  from_loc: Location?
+  to_loc: Location?
+  etw: timestamp?
+  eta: timestamp?
+  attrs: map
+}
+
+JobOrder {
+  job_id: uuid
+  task_id: uuid
+  eqp_no: string
+  eqp_type: enum
+  msg_id: uuid
+  cmd_id: uuid
+  msg_no: string
+  job_status: enum
+  retry_count: int
+}</pre>
+      </div>
+    </section>
+
+    <section id="appendix-b">
+      <h2>부록 B. gRPC / Internal API Draft</h2>
+      <div class="card">
+<pre>service TaskAssignmentService {
+  rpc RequestAssignment(TaskAssignmentRequest) returns (DispatchDecision);
+}
+
+service StateQueryService {
+  rpc GetEquipmentState(EquipmentQuery) returns (EquipmentStateResponse);
+  rpc GetAvailableEquipment(EquipmentQuery) returns (EquipmentListResponse);
+  rpc GetCurrentSSoT(TaskContext) returns (SSoTResponse);
+}
+
+service ExecutionService {
+  rpc DispatchJob(DispatchDecision) returns (Ack);
+}
+
+service EventService {
+  rpc NotifyAnomaly(AnomalyNotice) returns (Ack);
+}</pre>
+      </div>
+      <div class="card" style="margin-top:16px">
+<pre>POST /core/wi/process
+POST /core/xt/arrived
+POST /core/ocr/result
+PUT  /core/dispatch/battery
+GET  /core/task/{taskId}</pre>
+      </div>
+    </section>
+
+    <section id="appendix-c">
+      <h2>부록 C. Topic / Table Mapping</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>상태 변화</th><th>DB</th><th>Topic</th><th>비고</th></tr></thead>
+          <tbody>
+            <tr><td>WI 수신/검증</td><td>work_instruction, internal_task, outbox_event</td><td>task.lifecycle</td><td>CREATED / VALIDATION_FAILED</td></tr>
+            <tr><td>배차 완료</td><td>internal_task, outbox_event</td><td>task.lifecycle</td><td>ASSIGNED</td></tr>
+            <tr><td>Phase 진행</td><td>task_phase_history, outbox_event</td><td>job.progress</td><td>ARPT/JR canonical event</td></tr>
+            <tr><td>장비 상태 정규화</td><td>Redis SSOT</td><td>equipment.telemetry</td><td>DB는 raw audit만 필요 시 저장</td></tr>
+            <tr><td>OCR 결과</td><td>ocr_result, outbox_event</td><td>ecs.ocr.result</td><td>MATCH/MISMATCH</td></tr>
+            <tr><td>Gate 처리</td><td>gate_transaction, outbox_event</td><td>ecs.gate.transaction</td><td>입출차 감사</td></tr>
+            <tr><td>Anomaly</td><td>alarm_event, outbox_event</td><td>alarm.events</td><td>T-COMM 등</td></tr>
+            <tr><td>Replan</td><td>replan_log, outbox_event</td><td>replan.events</td><td>사유와 이전/신규 장비</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="appendix-d">
+      <h2>부록 D. Error Code Catalog</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>코드</th><th>설명</th><th>대표 발생 위치</th></tr></thead>
+          <tbody>
+            <tr><td>VAL-400</td><td>입력 검증 실패</td><td>CM-JS001 / /core/wi/process</td></tr>
+            <tr><td>WI-409</td><td>중복 또는 상태 충돌</td><td>WI_UPDATE / CANCEL</td></tr>
+            <tr><td>HS-460</td><td>Handshake 식별 불일치</td><td>C02-AODR.ITV_XT_NO != truck_id</td></tr>
+            <tr><td>OCR-422</td><td>OCR mismatch 또는 confidence 부족</td><td>GI 2L</td></tr>
+            <tr><td>EQP-503</td><td>장비 비가용/TB/OF/통신단절</td><td>Dispatcher / State Manager</td></tr>
+            <tr><td>SYS-500</td><td>내부 처리 오류</td><td>DB/Redis/Kafka/gRPC</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="appendix-e">
+      <h2>부록 E. 개발 체크리스트</h2>
+      <div class="card">
+        <ul class="tight">
+          <li>CM-JS001 / AT-JS001 / J05-TODR / J06-TODR / C02-AODR / S01-ARPT canonical mapping 완료</li>
+          <li>proto compile 및 service stub 생성 완료</li>
+          <li>DDL migration 및 unique index, enum, outbox 테이블 생성 완료</li>
+          <li>Redis SSOT TTL, queue key, GO preposition timer 구현 완료</li>
+          <li>Kafka topic + .dlq 생성 완료</li>
+          <li>FMS duplicate QoS1 멱등성 테스트 완료</li>
+          <li>DS/LD/GI/GO/GC happy path SIT 완료</li>
+          <li>FAULT-001 / 003 / 005 증빙 수집 완료</li>
+          <li>CM-JR001 1회 송신 보장 검증 완료</li>
+          <li>ecs.audit.log raw payload 저장 확인 완료</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      BPA ECS Integrated Development Guide v2.0 — 배포된 모든 설계문서와 후속 보강 문서를 기준으로 재작성한 개발자용 통합 구현 문서.
+    </footer>
+  </main>
+</div>
+</body>
+</html>
