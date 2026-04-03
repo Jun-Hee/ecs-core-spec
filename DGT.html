@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>DGT ECS Integrated Development Guide v3.0</title>
+<style>
+:root{
+  --bg:#f6f8fb;
+  --panel:#ffffff;
+  --panel2:#f0f4fb;
+  --line:#d9e2f0;
+  --text:#152033;
+  --muted:#5d6b82;
+  --accent:#1f5eff;
+  --accent2:#1aa38c;
+  --warn:#d97706;
+  --danger:#dc2626;
+  --ok:#059669;
+  --code:#0f172a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,Segoe UI,Apple SD Gothic Neo,Malgun Gothic,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+a{color:var(--accent);text-decoration:none}
+.container{display:grid;grid-template-columns:320px 1fr;gap:24px;max-width:1680px;margin:0 auto;padding:24px}
+.sidebar{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:20px;background:#fff;border-right:1px solid var(--line)}
+.sidebar h1{font-size:22px;line-height:1.25;margin:0 0 8px}
+.sidebar .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.sidebar nav a{display:block;padding:8px 10px;border-radius:10px;color:var(--muted);font-size:14px}
+.sidebar nav a:hover{background:#eef4ff;color:var(--text)}
+.content{padding:12px 8px 80px}
+.hero{padding:30px;border:1px solid var(--line);background:linear-gradient(135deg,#eef4ff,#f7fffc);border-radius:24px;box-shadow:0 10px 35px rgba(31,94,255,.08)}
+.hero h2{font-size:34px;line-height:1.15;margin:0 0 10px}
+.hero p{color:var(--muted);max-width:1180px}
+.grid{display:grid;gap:16px}.grid.kpi{grid-template-columns:repeat(4,1fr);margin-top:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 4px 18px rgba(15,23,42,.04)}
+.card h3,.card h4{margin-top:0}
+.kpi .n{font-size:28px;font-weight:800}.kpi .l{color:var(--muted);font-size:13px}
+section{margin-top:28px} section>h2{margin:0 0 12px;font-size:28px} section>p.lead{color:var(--muted);margin-top:-2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.four{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden} th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top} th{background:#f8fbff;text-align:left} tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}.badge.major{background:#e8f0ff;color:#1647bf}.badge.warn{background:#fff3df;color:#9a5b00}.badge.ok{background:#e6fbf5;color:#06795e}.badge.danger{background:#ffeaea;color:#b91c1c}
+ul.tight li{margin:4px 0} pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace} pre{margin:0;padding:16px;background:var(--code);border-radius:16px;overflow:auto;color:#e5efff}
+.callout{padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:#fafcff}.callout.warn{border-color:#f4d7a1;background:#fff8ec}.callout.danger{border-color:#f2b7b7;background:#fff4f4}.callout.ok{border-color:#b8ead7;background:#effdf7}.callout .title{font-weight:800;margin-bottom:6px}
+.flow{display:grid;gap:10px}.step{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:start;padding:14px;border-radius:16px;background:#fff;border:1px solid var(--line)}.step .num{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#1f5eff,#86abff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+.arch{display:grid;gap:12px}.arch .layer{padding:14px 16px;border-radius:16px;background:#fff;border:1px solid var(--line)}.arch .layer strong{display:block;font-size:18px}
+.small{font-size:13px;color:var(--muted)} .matrix td:first-child,.matrix th:first-child{white-space:nowrap}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+@media (max-width:1200px){.container{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--line)}.grid.kpi,.four,.three,.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <aside class="sidebar">
+    <h1>DGT ECS 통합 개발 가이드 v3.0</h1>
+    <div class="sub">표준 설계 문서 전체를 동원글로벌터미널 실증 기준으로 재설계한 개발자 배포본</div>
+    <nav>
+      <a href="#summary">1. 문서 목적</a>
+      <a href="#baseline">2. 기준 문서와 재설계 범위</a>
+      <a href="#delta">3. 표준 대비 DGT 차이</a>
+      <a href="#principles">4. DGT 고정 설계 원칙</a>
+      <a href="#architecture">5. DGT 목표 아키텍처</a>
+      <a href="#interfaces">6. 외부 인터페이스 재정의</a>
+      <a href="#tos">7. TOS↔ECS JSON-RPC 설계</a>
+      <a href="#sts">8. ECS↔SEOHO STS Socket 설계</a>
+      <a href="#armg">9. ECS↔Rotem ARMG REST 설계</a>
+      <a href="#canonical">10. Canonical 모델 재정의</a>
+      <a href="#jobid">11. jobId / taskId 정책</a>
+      <a href="#scheduler">12. Task Scheduler 재설계</a>
+      <a href="#state">13. State Manager 재설계</a>
+      <a href="#dispatcher">14. Dispatcher 재설계</a>
+      <a href="#orchestrator">15. Orchestrator 재설계</a>
+      <a href="#ds">16. DS 상세 시나리오</a>
+      <a href="#gi">17. GI/GO/GC 적용 원칙</a>
+      <a href="#data">18. DB / Kafka / Audit 정책</a>
+      <a href="#proto">19. 내부 gRPC / Proto 적용</a>
+      <a href="#sit">20. DGT SIT/SAT 검증</a>
+      <a href="#repo">21. 저장소와 개발 순서</a>
+      <a href="#deliverables">22. 배포 문서 패키지</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <section id="summary" class="hero">
+      <h2>표준 ECS 설계 문서 전체를 DGT 실장비 구조로 치환한 개발 착수 기준서</h2>
+      <p>본 문서는 Work Instruction, TOS-FMS, ARMG, STS 인터페이스 정의서와 Biz Flow, System Architecture, Core Module Design, Function Definition, 그리고 후속 표준 패키지(ICD, Message Field Spec, Developer Guide, proto, PostgreSQL DDL, Kafka Event Schema, SIT Test Book)를 모두 통합하여, <strong>동원글로벌터미널(DGT) 테스트베드 기준</strong>으로 다시 설계한 개발자 가이드다. 목표는 표준 문서의 개념 구조를 유지하되, 실제 DGT 장비 연동 구조에 맞게 <strong>TOS JSON-RPC / SEOHO Socket / Rotem REST</strong>로 인터페이스와 흐름을 재정렬하는 것이다.</p>
+      <div class="grid kpi">
+        <div class="card"><div class="n">3</div><div class="l">DGT 외부 연동 프로토콜<br/>JSON-RPC / Socket / REST</div></div>
+        <div class="card"><div class="n">4</div><div class="l">Core 고정 컴포넌트<br/>Task Scheduler / Dispatcher / State Manager / Orchestrator</div></div>
+        <div class="card"><div class="n">5</div><div class="l">TOS 동기화 타이밍<br/>CREATED / ASSIGNED / QUAY_DONE / YARD_DONE / COMPLETED</div></div>
+        <div class="card"><div class="n">1</div><div class="l">개발 기준 키 정책<br/>jobId는 ECS가 생성</div></div>
+      </div>
+    </section>
+
+    <section id="baseline">
+      <h2>2. 기준 문서와 재설계 범위</h2>
+      <p class="lead">표준 설계 문서의 역할은 유지하되, DGT 대상 시스템에 맞게 인터페이스, 상태흐름, 키 정책, Sync 정책을 전면 수정한다.</p>
+      <div class="card">
+        <table class="matrix">
+          <thead><tr><th>문서군</th><th>원 표준 역할</th><th>DGT 적용 시 수정 포인트</th></tr></thead>
+          <tbody>
+            <tr><td>TOS↔ECS Work Instruction</td><td>WI 입력 계약</td><td>JSON-RPC envelope, ECS 생성 jobId sync, LIST형 Plan 입력, 진행상태 회신 정책 추가</td></tr>
+            <tr><td>TOS↔FMS</td><td>AGV 작업 계약</td><td>DGT DS 기준 1차/2차 AGV task 분리, lane/TPW 목적지 규칙 명확화</td></tr>
+            <tr><td>ECS↔ARMG</td><td>야드크레인 명령/상태</td><td>Rotem REST endpoint 체계로 치환, J03/J05/J06/J07 호출·응답 명세 재정의</td></tr>
+            <tr><td>ECS↔STS</td><td>안벽크레인 명령/상태</td><td>SEOHO Socket 프레임, 단계별 QC-JR / J02/J04 phase map 보정</td></tr>
+            <tr><td>Biz Flow</td><td>시나리오 흐름</td><td>DGT DS 중심 Phase 0~5, TOS sync 5회, GI는 DS 파생으로 임시 정의</td></tr>
+            <tr><td>Architecture / Core / Function</td><td>내부 모듈 구조</td><td>외부 프로토콜 변경 반영, Kafka 역할 축소, gRPC는 내부 서비스 전용으로 고정</td></tr>
+            <tr><td>ICD / Message Spec / Developer Guide</td><td>개발 착수 계약</td><td>DGT canonical 명명, JSON-RPC/Socket/REST 계약 재작성</td></tr>
+            <tr><td>proto / SQL / Kafka / SIT</td><td>구현/검증 baseline</td><td>DGT 상태 및 sync 필드 추가, 장비 audit와 중간 상태 검증 강화</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="delta">
+      <h2>3. 표준 대비 DGT 차이</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>항목</th><th>표준 설계</th><th>DGT 재설계</th><th>설계 의미</th></tr></thead>
+          <tbody>
+            <tr><td>TOS 연동</td><td>REST + Kafka 해석 가능</td><td><span class="badge major">JSON-RPC 고정</span></td><td>TOS는 ECS 내부 Kafka를 직접 소비하지 않음</td></tr>
+            <tr><td>STS 연동</td><td>OPC-UA 중심</td><td><span class="badge major">SEOHO Socket</span></td><td>장비사 실연동 프레임에 맞춰 Adapter를 교체</td></tr>
+            <tr><td>ARMG 연동</td><td>OPC-UA 중심</td><td><span class="badge major">Rotem REST</span></td><td>명령/응답 HTTP 계약과 비동기 상태조회 병행</td></tr>
+            <tr><td>jobId 소유자</td><td>TOS 생성 전제 해석 가능</td><td><span class="badge warn">ECS 생성</span></td><td>WI에는 jobId가 없으므로 Scheduler가 생성 후 TOS에 동기화</td></tr>
+            <tr><td>AGV/ARMG 사전지정</td><td>문서상 혼재</td><td><span class="badge warn">초기 null</span></td><td>Dispatcher 이후 확정</td></tr>
+            <tr><td>TOS 상태 보고</td><td>시작/종료 2회 해석 가능</td><td><span class="badge ok">5단계 동기화</span></td><td>운영자가 진행상태를 잃지 않도록 중간 상태를 즉시 반영</td></tr>
+            <tr><td>Kafka 역할</td><td>상태 공유까지 포함 가능</td><td><span class="badge danger">장비제어 금지</span></td><td>Read Model, Audit, Replay, KPI 전용</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="principles">
+      <h2>4. DGT 고정 설계 원칙</h2>
+      <div class="four">
+        <div class="card"><h3>Core 4개 유지</h3><p>Task Scheduler, Dispatcher, State Manager, Orchestrator만 Core다. DGT 프로토콜 차이는 모두 Adapter에서 흡수한다.</p></div>
+        <div class="card"><h3>외부 인터페이스는 DGT 실장비 기준</h3><p>TOS JSON-RPC, STS Socket, ARMG REST를 원천 계약으로 삼고, 표준 문서는 canonical 참조로만 사용한다.</p></div>
+        <div class="card"><h3>jobId는 ECS 생성</h3><p>WI는 Plan 입력이며 실행키는 ECS가 만든다. 생성 즉시 TOS에 회신해 이후 모든 진행 인터페이스가 같은 키를 사용하게 한다.</p></div>
+        <div class="card"><h3>Kafka는 내부 이벤트 버스</h3><p>TOS와 장비를 Kafka에 직접 붙이지 않는다. Kafka는 DB outbox와 함께 Audit, UI, KPI, Replay 전용으로 한정한다.</p></div>
+      </div>
+      <div class="callout warn" style="margin-top:16px">
+        <div class="title">DGT에서 반드시 제거해야 할 해석</div>
+        표준 문서를 그대로 쓰면 STS/ARMG가 OPC-UA 장비처럼 보이지만, DGT 대상 개발에서는 이 해석이 틀린다. 실제 개발 계약은 표준 문서가 아니라 <strong>DGT 장비 인터페이스 정의서와 현장 메시지 방향</strong>이 우선이다.
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>5. DGT 목표 아키텍처</h2>
+      <div class="arch">
+        <div class="layer"><strong>Layer 1. External Integration</strong> TOS JSON-RPC, SEOHO STS Socket, Rotem ARMG REST, FMS 인터페이스, Gate/OCR/BMS 확장연계.</div>
+        <div class="layer"><strong>Layer 2. Core Services</strong> Task Scheduler, Dispatcher, State Manager, Orchestrator. 내부 서비스 간 통신은 gRPC를 사용한다.</div>
+        <div class="layer"><strong>Layer 3. Internal Event Backbone</strong> Kafka는 task.lifecycle, job.progress, alarm.events, replan.events, dashboard.readmodel, ecs.audit.log 전용.</div>
+        <div class="layer"><strong>Layer 4. Storage</strong> PostgreSQL + Redis SSOT + Audit 저장. Work Instruction, internal_task, job_order, task_phase_history, event_outbox를 표준 유지하되 DGT sync 필드를 추가한다.</div>
+        <div class="layer"><strong>Layer 5. Presentation</strong> 운영 UI는 Read Model과 Core API만 호출한다. 장비와 TOS를 직접 치지 않는다.</div>
+      </div>
+      <div class="two" style="margin-top:16px">
+        <div class="card">
+          <h3>DGT 프로토콜 맵</h3>
+          <table>
+            <thead><tr><th>연계</th><th>프로토콜</th><th>설계 기준</th></tr></thead>
+            <tbody>
+              <tr><td>TOS ↔ ECS</td><td>JSON-RPC</td><td>Plan 입력, Sync, 상태보고</td></tr>
+              <tr><td>ECS ↔ SEOHO STS</td><td>Socket</td><td>J02/J04, QC-JR, C02, 상태 event</td></tr>
+              <tr><td>ECS ↔ Rotem ARMG</td><td>REST API</td><td>J03/J05/J06/J07, C02, 상태조회</td></tr>
+              <tr><td>Core ↔ Core</td><td>gRPC</td><td>배차, 상태질의, 실행요청</td></tr>
+              <tr><td>ECS 내부 비동기</td><td>Kafka</td><td>UI, 감사, KPI, 재생</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>왜 내부만 gRPC인가</h3>
+          <ul class="tight">
+            <li>Core 컴포넌트를 별도 컨테이너/Pod로 분리 배포할 수 있다.</li>
+            <li>RequestAssignment, DispatchJob, GetEquipmentState 같은 typed contract를 유지할 수 있다.</li>
+            <li>외부 장비 프로토콜이 바뀌어도 Core는 흔들리지 않는다.</li>
+            <li>따라서 gRPC는 장비 통신용이 아니라 <strong>마이크로서비스 내부 경계용</strong>이다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="interfaces">
+      <h2>6. 외부 인터페이스 재정의</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>영역</th><th>표준 인터페이스 명</th><th>DGT 실제 설계</th><th>핵심 수정</th></tr></thead>
+          <tbody>
+            <tr><td>TOS 입력</td><td>CM-JS001</td><td>JSON-RPC <code>setWorkInstruction</code></td><td>LIST형 WI 수용, Plan 기준, jobId 없음</td></tr>
+            <tr><td>TOS Sync</td><td>CM-JR001</td><td>JSON-RPC <code>syncWorkInstruction</code></td><td>생성/배차/진행/완료 상태를 단계별로 push</td></tr>
+            <tr><td>STS 명령</td><td>J02/J04-TODR</td><td>SEOHO Socket frame</td><td>phase map을 DGT 장비 동작에 맞게 복원</td></tr>
+            <tr><td>STS 진행</td><td>QC-JR001~5, J0x-ARPT</td><td>Socket event</td><td>0M~6C와 QC side event 동시 수신</td></tr>
+            <tr><td>ARMG 명령</td><td>J03/J05/J06/J07</td><td>Rotem REST endpoint</td><td>request/response와 polling/webhook 보강</td></tr>
+            <tr><td>ARMG handshake</td><td>C02-AODR/TRPT</td><td>REST + callback</td><td>AGV/XT 판별과 정위치 승인 정책 분리</td></tr>
+            <tr><td>FMS 연동</td><td>AT-JS/JR/MR</td><td>DGT TOS-FMS 계약 참조</td><td>ECS가 AGV 배정 결과를 이용해 task를 발행</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tos">
+      <h2>7. TOS ↔ ECS JSON-RPC 설계</h2>
+      <div class="two">
+        <div class="card">
+          <h3>입력 원칙</h3>
+          <ul class="tight">
+            <li>WI는 실행 지시가 아니라 <strong>Plan 입력</strong>이다.</li>
+            <li>한 번에 LIST 형태로 복수 작업을 전송할 수 있다.</li>
+            <li>필수 정보는 선박/VVD, Bay/Row/Tier, cntrNo, jobTp, from/to slot, 컨테이너 속성이다.</li>
+            <li>이 단계에는 jobId가 없다.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>출력 원칙</h3>
+          <ul class="tight">
+            <li>ECS는 internal task 생성 시점에 <code>task_id</code>와 <code>job_id</code>를 만든다.</li>
+            <li>TOS에는 같은 상관키로 WI Sync를 되돌린다.</li>
+            <li>중간 상태를 포함해 최소 5회 동기화한다.</li>
+            <li>TOS는 Kafka 대신 JSON-RPC 응답/통지로만 ECS 상태를 본다.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>DGT JSON-RPC 기본 구조</h3>
+<pre>{
+  "jsonrpc": "2.0",
+  "method": "setWorkInstruction",
+  "id": "msg-uuid",
+  "params": {
+    "eventType": "WI_NEW | WI_UPDATE | CANCEL",
+    "workInstructions": [
+      {
+        "containerWiRef": "WI-2026-0001",
+        "jobTp": "DS",
+        "cntrNo": "ABCD1234567",
+        "fromBay": "25",
+        "fromRow": "12",
+        "fromTier": "06",
+        "pointOfWork": "QC101"
+      }
+    ]
+  }
+}</pre>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>DGT TOS Sync 상태 표준</h3>
+        <table>
+          <thead><tr><th>상태</th><th>발생 주체</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td>CREATED</td><td>Task Scheduler</td><td>WI 검증 후 ECS task/job 생성 완료</td></tr>
+            <tr><td>ASSIGNED</td><td>Dispatcher</td><td>QC/AGV/ARMG 또는 필요한 장비 배정 완료</td></tr>
+            <tr><td>QUAY_DONE</td><td>Orchestrator</td><td>키사이드 작업 완료, AGV 적재 완료</td></tr>
+            <tr><td>YARD_DONE</td><td>Orchestrator</td><td>야드 하차 또는 적재 위치 작업 완료</td></tr>
+            <tr><td>COMPLETED</td><td>Orchestrator</td><td>전체 시나리오 종결</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="sts">
+      <h2>8. ECS ↔ SEOHO STS Socket 설계</h2>
+      <div class="three">
+        <div class="card"><h3>명령</h3><p>J02-TODR, J04-TODR를 Socket frame으로 전송한다. 표준의 OPC-UA method call 개념은 Socket send/ack로 치환한다.</p></div>
+        <div class="card"><h3>진행</h3><p>J02-ARPT, J04-ARPT, QC-JR001~5를 모두 수신해 phase와 장비 응답을 이중으로 본다.</p></div>
+        <div class="card"><h3>정위치</h3><p>C02-AODR / C02-TRPT는 SEOHO 장비가 보내는 정위치 요청과 ECS 허가 응답으로 해석한다.</p></div>
+      </div>
+      <div class="callout ok" style="margin-top:16px">
+        <div class="title">Phase 1에서 5R, 6C가 빠져 보이는 문제</div>
+        표준 Biz Flow 일부 그림에서는 J02 단계가 0M~4M까지만 강조되지만, DGT 실제 운전에서는 포털/후속 단계와 결합되어 5R, 6C 의미가 사라지는 것이 아니다. 따라서 DGT 설계서에서는 <strong>J02, J04 각각의 phase map을 분리</strong>해 0M~6C를 명시하고, QC-JR 이벤트와 함께 저장해야 한다.
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>SEOHO Socket Frame 예시</h3>
+<pre>{
+  "msgNo": "J04-TODR",
+  "msgId": "uuid",
+  "cmdId": "uuid",
+  "eqpNo": "QC101",
+  "eqpTp": "S",
+  "cntrNo": "ABCD1234567",
+  "agvNo": "AT301",
+  "laneNo": "2",
+  "phase": "DISPATCH"
+}</pre>
+      </div>
+    </section>
+
+    <section id="armg">
+      <h2>9. ECS ↔ Rotem ARMG REST 설계</h2>
+      <div class="two">
+        <div class="card">
+          <h3>핵심 원칙</h3>
+          <ul class="tight">
+            <li>J03/J05/J06/J07은 REST endpoint 호출로 정의한다.</li>
+            <li>C02 handshake는 REST request + callback 또는 polling response로 구현한다.</li>
+            <li>야드 위치, TPW/TPL, 블록/베이/로우는 response body에 canonical location으로 다시 적재한다.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>권장 Endpoint</h3>
+          <ul class="tight">
+            <li><code>POST /api/v1/armg/jobs/j03</code></li>
+            <li><code>POST /api/v1/armg/jobs/j05</code></li>
+            <li><code>POST /api/v1/armg/jobs/j06</code></li>
+            <li><code>POST /api/v1/armg/inventory/j07</code></li>
+            <li><code>POST /api/v1/armg/handshake/c02</code></li>
+            <li><code>GET /api/v1/armg/jobs/{cmdId}</code></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Rotem REST 요청 예시</h3>
+<pre>{
+  "cmdId": "uuid",
+  "jobTp": "DS",
+  "eqpNo": "ATC01",
+  "cntrNo": "ABCD1234567",
+  "fromPosition": "01W-W1-02",
+  "toPosition": "A01-01-A-1",
+  "agvNo": "AT301",
+  "doorDirection": "W"
+}</pre>
+      </div>
+    </section>
+
+    <section id="canonical">
+      <h2>10. Canonical 모델 재정의</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>개체</th><th>표준 기준</th><th>DGT 확장</th></tr></thead>
+          <tbody>
+            <tr><td>work_instruction</td><td>원문 보존</td><td>JSON-RPC request_id, source_batch_id, vessel slot detail 추가</td></tr>
+            <tr><td>internal_task</td><td>task_id, wi_ref, status, assignments</td><td>tos_sync_status, quay_completed_at, yard_completed_at, dgt_scenario_phase 추가</td></tr>
+            <tr><td>job_order</td><td>장비별 명령 단위</td><td>protocol_type(SOCKET/REST/JSONRPC), vendor_msg_no, vendor_ack_code 추가</td></tr>
+            <tr><td>task_phase_history</td><td>phase progress 추적</td><td>socket_frame_id, rest_request_id, tos_sync_seq 추가</td></tr>
+            <tr><td>integration_audit_log</td><td>원문 payload 저장</td><td>direction, remote_endpoint, protocol_type를 필수화</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:16px">
+<pre>InternalTaskDgt {
+  task_id: uuid
+  wi_ref: string
+  job_id: uuid
+  cntr_no: string
+  job_tp: enum
+  status: enum
+  assigned_qc_id: string?
+  assigned_agv_id: string?
+  assigned_armg_id: string?
+  tos_sync_status: enum
+  dgt_phase: string
+  quay_completed_at: timestamp?
+  yard_completed_at: timestamp?
+  attrs: map
+}</pre>
+      </div>
+    </section>
+
+    <section id="jobid">
+      <h2>11. jobId / taskId 정책</h2>
+      <div class="callout danger">
+        <div class="title">DGT 기준 확정</div>
+        WI는 Plan 데이터이며 jobId가 없다. 따라서 <strong>ECS가 jobId를 생성</strong>하고, 이후 TOS·STS·ARMG·FMS에 동일 상관키 체계를 유지해야 한다.
+      </div>
+      <div class="flow" style="margin-top:16px">
+        <div class="step"><div class="num">1</div><div><strong>WI 수신</strong><br/>containerWiRef를 멱등키로 사용한다. 아직 jobId는 없다.</div></div>
+        <div class="step"><div class="num">2</div><div><strong>Task 생성</strong><br/>Task Scheduler가 task_id와 scenario root job_id를 생성한다.</div></div>
+        <div class="step"><div class="num">3</div><div><strong>TOS Sync</strong><br/>CM-JR001 상당의 JSON-RPC sync로 ECS 생성 jobId를 TOS에 회신한다.</div></div>
+        <div class="step"><div class="num">4</div><div><strong>장비 명령 파생</strong><br/>STS, FMS, ARMG에는 장비별 cmd_id를 파생하되 root job_id와 연결한다.</div></div>
+      </div>
+    </section>
+
+    <section id="scheduler">
+      <h2>12. Task Scheduler 재설계</h2>
+      <div class="card">
+        <h3>DGT용 입력 처리 규칙</h3>
+        <ul class="tight">
+          <li>LIST형 WI를 batch ingest 한다.</li>
+          <li>검증은 선박/Bay/Row/Tier, cntrNo, jobTp, pointOfWork, slot 형식, 컨테이너 속성까지 포함한다.</li>
+          <li>같은 containerWiRef에 대해 WI_UPDATE / CANCEL을 상태별로 병합한다.</li>
+          <li>검증 통과 즉시 task_id, job_id를 생성하고 TOS sync 대기열에 넣는다.</li>
+          <li>priority score는 표준 공식을 유지하되 선박 출항시간, Bay 집중도, 같은 QC work queue 밀집도를 반영한다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="state">
+      <h2>13. State Manager 재설계</h2>
+      <div class="two">
+        <div class="card">
+          <h3>상태 수집원</h3>
+          <ul class="tight">
+            <li>SEOHO Socket status event</li>
+            <li>Rotem REST status callback/polling</li>
+            <li>FMS task/status/location</li>
+            <li>TOS sync ack</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>핵심 추가 항목</h3>
+          <ul class="tight">
+            <li>socket connected / disconnected 상태를 장비 health로 반영</li>
+            <li>REST timeout과 HTTP 5xx를 anomaly로 승격</li>
+            <li>TOS sync 실패를 business anomaly로 기록</li>
+            <li>AGV lane 할당 결과를 SSOT에 저장</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="dispatcher">
+      <h2>14. Dispatcher 재설계</h2>
+      <div class="three">
+        <div class="card"><h3>배정 시점</h3><p>WI 수신 직후가 아니라 검증 완료 후. 초기 WI에는 agvNo, armgNo가 없다는 것을 전제로 한다.</p></div>
+        <div class="card"><h3>DS 배정</h3><p>QC는 pointOfWork 기준, AGV는 ETA/배터리/혼잡도 기준, ARMG는 Yard block 기준으로 선정한다.</p></div>
+        <div class="card"><h3>GI/GO</h3><p>현재 GOS 설계 부재이므로 DGT 1차 범위에서는 DS 파생 또는 ARMG 중심 단순 모델로 운영한다.</p></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>ETW / ETA 해석 주의</h3>
+        <p>WI 단계에서 ETW/ETA는 아직 확정값이 아니다. DGT 설계에서는 <strong>장비 확정 이후 계산된 예측값</strong>으로 정의한다. 즉 ETW는 QC/ARMG의 예상 작업 가능 시점, ETA는 AGV가 해당 handshake 위치에 도착할 예상 시점이다.</p>
+      </div>
+    </section>
+
+    <section id="orchestrator">
+      <h2>15. Orchestrator 재설계</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>기능</th><th>표준 역할</th><th>DGT 적용 변화</th></tr></thead>
+          <tbody>
+            <tr><td>Job 분해</td><td>시나리오별 장비 job 생성</td><td>Socket/REST/JSON-RPC별 명령 래퍼 생성</td></tr>
+            <tr><td>Handshake</td><td>C02 허가</td><td>SEOHO/Rotem 메시지 차이를 canonical handshake로 통합</td></tr>
+            <tr><td>완료 판정</td><td>이중 신호 확인</td><td>QUAY_DONE과 YARD_DONE 중간 완료를 별도로 기록 후 TOS sync</td></tr>
+            <tr><td>Replan</td><td>fault/timeout 대응</td><td>장비 fault뿐 아니라 TOS sync 실패, REST timeout도 포함</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="ds">
+      <h2>16. DS 상세 시나리오</h2>
+      <div class="flow">
+        <div class="step"><div class="num">P0</div><div><strong>Plan Intake</strong><br/>TOS가 WI LIST를 보낸다. 선박, 컨테이너, Vessel Bay/Row/Tier, 위치 정보가 포함된다. jobId는 없다.</div></div>
+        <div class="step"><div class="num">P1</div><div><strong>ECS Task 생성</strong><br/>Scheduler가 우선순위를 정하고 task_id/job_id를 만든 뒤 TOS에 CREATED sync를 보낸다.</div></div>
+        <div class="step"><div class="num">P2</div><div><strong>QC Main 작업</strong><br/>SEOHO STS로 J02-TODR를 보내고 QC-JR001, J02-ARPT 0M~4M을 추적한다.</div></div>
+        <div class="step"><div class="num">P3</div><div><strong>AGV Dispatch 병렬</strong><br/>Dispatcher가 AGV를 선정한 뒤 FMS task를 생성한다. Lane 정보는 AGV/FMS 응답으로 보정한다.</div></div>
+        <div class="step"><div class="num">P4</div><div><strong>QC Portal Handshake</strong><br/>J04-TODR 이후 SEOHO가 정위치 요청을 보내면 C02 승인 후 5L/6C까지 진행한다. 이때 QUAY_DONE sync를 보낸다.</div></div>
+        <div class="step"><div class="num">P5</div><div><strong>Yard Delivery</strong><br/>새로운 AGV 이동 또는 목적지 갱신 후 Rotem REST J03-TODR를 발행한다. APPROACH_YARD, ARRIVE, WORKING, COMPLETE 상태를 추적한다.</div></div>
+        <div class="step"><div class="num">P6</div><div><strong>종결</strong><br/>YC/J03 완료와 AGV COMPLETE가 함께 충족되면 YARD_DONE 및 COMPLETED sync를 순차적으로 보낸다.</div></div>
+      </div>
+      <div class="callout ok" style="margin-top:16px">
+        <div class="title">DGT DS 최종 해석</div>
+        STS에는 사실상 두 번의 의미 있는 작업지시(J02, J04)가 가고, FMS는 quay 접근/yard 이동을 포함한 AGV task를 관리하며, yard 측은 Rotem J03가 최종 적치 실행점이 된다. 따라서 표준 Biz Flow를 DGT에 맞추면 <strong>Quay 완료와 Yard 완료를 분리해 관리</strong>하는 것이 가장 안정적이다.
+      </div>
+    </section>
+
+    <section id="gi">
+      <h2>17. GI / GO / GC 적용 원칙</h2>
+      <div class="two">
+        <div class="card">
+          <h3>GI</h3>
+          <p>현재 GOS 연동 설계가 부재하므로 1차 적용에서는 DS 파생으로 해석한다. 즉, 외부 차량 흐름을 제외한 core sequencing, slot 검증, ARMG 하차 논리를 DS-yard 변형으로 우선 구현한다.</p>
+        </div>
+        <div class="card">
+          <h3>GO / GC</h3>
+          <p>표준 문서 구조는 유지하되 DGT 실제 장비 계약이 확보되기 전까지는 설계 flag로 격리한다. 운영 투입 시에는 Gate/외부차량/GOS 연동 상세 계약이 추가되어야 한다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="data">
+      <h2>18. DB / Kafka / Audit 정책</h2>
+      <div class="three">
+        <div class="card">
+          <h3>DB</h3>
+          <p>표준 DDL 골격은 유지한다. 단 DGT sync용 필드와 protocol_type, vendor_ack_code, tos_sync_seq를 추가한다.</p>
+        </div>
+        <div class="card">
+          <h3>Kafka</h3>
+          <p>task.lifecycle, job.progress, alarm.events, replan.events, dashboard.readmodel, ecs.audit.log는 유지하되 TOS 직접 연동은 제거한다.</p>
+        </div>
+        <div class="card">
+          <h3>Audit</h3>
+          <p>JSON-RPC request/response, Socket frame, REST request/response를 모두 원문으로 저장한다. 추후 현장 이슈는 이 로그가 기준이다.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>DGT DB 확장 권장</h3>
+<pre>ALTER TABLE internal_task
+  ADD COLUMN IF NOT EXISTS root_job_id uuid,
+  ADD COLUMN IF NOT EXISTS tos_sync_status varchar(30),
+  ADD COLUMN IF NOT EXISTS quay_completed_at timestamptz,
+  ADD COLUMN IF NOT EXISTS yard_completed_at timestamptz,
+  ADD COLUMN IF NOT EXISTS dgt_phase varchar(50);
+
+ALTER TABLE job_order
+  ADD COLUMN IF NOT EXISTS protocol_type varchar(20),
+  ADD COLUMN IF NOT EXISTS vendor_msg_no varchar(30),
+  ADD COLUMN IF NOT EXISTS vendor_ack_code varchar(20);
+</pre>
+      </div>
+    </section>
+
+    <section id="proto">
+      <h2>19. 내부 gRPC / Proto 적용</h2>
+      <div class="card">
+        <p>DGT 외부 연동이 JSON-RPC, Socket, REST로 바뀌더라도 <strong>내부 proto와 gRPC 서비스는 유지</strong>한다. 이는 표준 <code>bpa_ecs_core_v1.proto</code>를 버리는 것이 아니라, 외부 Adapter를 갈아끼워도 Core 계약은 고정한다는 뜻이다.</p>
+<pre>Task Scheduler -> Dispatcher : RequestAssignment
+Dispatcher -> State Manager : GetEquipmentState / GetAvailableEquipment
+Dispatcher -> Orchestrator : DispatchJob
+State Manager -> Orchestrator : NotifyAnomaly</pre>
+      </div>
+    </section>
+
+    <section id="sit">
+      <h2>20. DGT SIT / SAT 검증</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>검증 영역</th><th>표준 SIT</th><th>DGT 추가 확인</th></tr></thead>
+          <tbody>
+            <tr><td>TOS 입력</td><td>WI_NEW 검증</td><td>LIST batch, JSON-RPC id, ECS 생성 jobId sync 확인</td></tr>
+            <tr><td>DS happy path</td><td>J02→AT→C02→J03</td><td>SEOHO Socket frame integrity, Rotem REST response correlation 확인</td></tr>
+            <tr><td>중간 상태</td><td>completion 중심</td><td>CREATED/ASSIGNED/QUAY_DONE/YARD_DONE/COMPLETED 5단계 TOS sync 확인</td></tr>
+            <tr><td>장애</td><td>timeout/fault</td><td>Socket disconnect, REST 500, TOS sync retry 실패 포함</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="repo">
+      <h2>21. 저장소와 개발 순서</h2>
+      <div class="flow">
+        <div class="step"><div class="num">1</div><div><strong>DGT Canonical 계약 확정</strong><br/>JSON-RPC, Socket, REST를 canonical DTO로 매핑한다.</div></div>
+        <div class="step"><div class="num">2</div><div><strong>Adapter 3종 선행</strong><br/>TOS-JSONRPC Adapter, SEOHO-Socket Adapter, Rotem-REST Adapter를 먼저 만든다.</div></div>
+        <div class="step"><div class="num">3</div><div><strong>DB/Outbox 확장</strong><br/>DGT sync 필드와 protocol_type을 추가한다.</div></div>
+        <div class="step"><div class="num">4</div><div><strong>DS end-to-end 구현</strong><br/>Phase 0~5와 5단계 TOS sync를 먼저 완성한다.</div></div>
+        <div class="step"><div class="num">5</div><div><strong>GI/GO 확장</strong><br/>GOS 계약이 확보되는 범위까지 단계적으로 붙인다.</div></div>
+      </div>
+    </section>
+
+    <section id="deliverables">
+      <h2>22. 배포 문서 패키지</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>문서</th><th>새 버전명</th><th>목적</th></tr></thead>
+          <tbody>
+            <tr><td>통합 가이드</td><td>DGT_ECS_Integrated_Development_Guide_v3.0</td><td>전체 구현 기준</td></tr>
+            <tr><td>ICD</td><td>DGT_ECS_ICD_v2.0</td><td>JSON-RPC/Socket/REST 상세 계약</td></tr>
+            <tr><td>Field Spec</td><td>DGT_ECS_Message_Field_Spec_v2.0</td><td>canonical dictionary</td></tr>
+            <tr><td>Developer Guide</td><td>DGT_ECS_Developer_Guide_v2.0</td><td>실제 개발 절차서</td></tr>
+            <tr><td>SIT Book</td><td>DGT_ECS_SIT_Test_Book_v2.0</td><td>DGT 전용 시나리오 시험서</td></tr>
+            <tr><td>HTML Guide</td><td>index2.html</td><td>개발자 배포용 웹 문서</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <footer>
+        DGT ECS Integrated Development Guide v3.0 — 표준 ECS 설계 패키지를 동원글로벌터미널 실증 환경에 맞게 재설계한 개발자 배포 기준서.
+      </footer>
+    </section>
+  </main>
+</div>
+</body>
+</html>
