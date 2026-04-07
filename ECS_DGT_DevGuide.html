@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECS Core 개발자 가이드 — DGT 1단계 적용 v1.5</title>
+<style>
+:root{--primary:#2E5D9B;--primary-dark:#1A3A6B;--accent:#E05A00;--bg:#F8FAFC;--surface:#FFFFFF;--border:#DDE3EC;--text:#1C2B3A;--text-muted:#6B7A8D;--success:#1A7F5A;--warning:#B45309;--danger:#C0392B;--info:#1D6FA4;--code-bg:#1E2D3D;--nav-width:280px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+a{color:var(--primary);text-decoration:none;}
+nav{position:fixed;top:0;left:0;width:var(--nav-width);height:100vh;background:var(--primary-dark);overflow-y:auto;z-index:100;padding:0 0 40px 0;}
+.nav-header{background:var(--primary);padding:20px 18px 16px;border-bottom:2px solid rgba(255,255,255,.15);}
+.nav-logo{color:#fff;font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:4px;}
+.nav-title{color:#fff;font-size:16px;font-weight:700;line-height:1.3;}
+.nav-badge{display:inline-block;margin-top:6px;background:var(--accent);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;}
+.nav-section{padding:16px 18px 4px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);}
+.nav-item{display:block;padding:8px 18px 8px 22px;color:rgba(255,255,255,.8);font-size:13px;border-left:3px solid transparent;transition:all .15s;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;border-left-color:var(--accent);}
+.nav-item.sub{padding-left:36px;font-size:12px;color:rgba(255,255,255,.6);}
+.nav-item.sub:hover{color:rgba(255,255,255,.9);}
+main{margin-left:var(--nav-width);min-height:100vh;}
+.content{max-width:980px;margin:0 auto;padding:48px 40px 80px;}
+section{margin-bottom:64px;}
+.section-anchor{scroll-margin-top:24px;}
+h1{font-size:30px;font-weight:800;color:var(--primary-dark);border-bottom:3px solid var(--primary);padding-bottom:12px;margin-bottom:24px;}
+h2{font-size:21px;font-weight:700;color:var(--primary);margin:36px 0 14px;padding-left:10px;border-left:4px solid var(--accent);}
+h3{font-size:17px;font-weight:700;color:var(--primary-dark);margin:24px 0 10px;}
+h4{font-size:15px;font-weight:700;color:var(--text);margin:16px 0 8px;}
+p{margin:10px 0;}
+.hero{background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 60%,#3B7DD8 100%);color:#fff;padding:48px 40px;}
+.hero-badge{display:inline-block;background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:14px;}
+.hero h1{color:#fff;border:none;font-size:34px;margin-bottom:8px;}
+.hero-sub{font-size:16px;opacity:.85;margin-bottom:20px;}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;}
+.hero-meta-item{background:rgba(255,255,255,.12);padding:8px 16px;border-radius:8px;font-size:13px;}
+.hero-meta-item span{opacity:.7;font-size:11px;display:block;}
+.callout{border-radius:8px;padding:14px 18px;margin:16px 0;border-left:4px solid;}
+.callout.warning{background:#FFF8EC;border-color:#B45309;color:#7A3B00;}
+.callout.danger{background:#FEF2F2;border-color:#C0392B;color:#8B0000;}
+.callout.info{background:#EFF6FF;border-color:#1D6FA4;color:#0C3B6B;}
+.callout.success{background:#F0FDF4;border-color:#1A7F5A;color:#064E33;}
+.callout strong{display:block;margin-bottom:4px;}
+.tbl-wrap{overflow-x:auto;margin:16px 0;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+thead tr{background:var(--primary);color:#fff;}
+thead th{padding:10px 14px;text-align:left;font-weight:600;font-size:13px;}
+tbody tr:nth-child(even){background:#F5F7FA;}
+tbody tr:hover{background:#EEF2F8;}
+td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge-crit{background:#FEE2E2;color:#C0392B;}
+.badge-warn{background:#FEF3C7;color:#B45309;}
+.badge-ok{background:#D1FAE5;color:#065F46;}
+pre{background:var(--code-bg);color:#A8D5FF;border-radius:10px;padding:20px 24px;overflow-x:auto;font-size:12.5px;line-height:1.6;margin:14px 0;}
+code{font-family:'Fira Code','Cascadia Code',Consolas,monospace;}
+.code-label{background:var(--primary);color:#fff;font-size:11px;padding:3px 12px;border-radius:4px 4px 0 0;display:inline-block;margin-bottom:-4px;}
+p code,td code,li code{background:#EEF3FA;color:#1A3A6B;padding:2px 6px;border-radius:4px;font-size:12px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.card-title{font-size:14px;font-weight:700;color:var(--primary);margin-bottom:10px;}
+.scope-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}
+.scope-card{background:var(--surface);border-radius:10px;padding:16px;border:1px solid var(--border);}
+.scope-card.green{border-top:4px solid var(--success);}
+.scope-card.amber{border-top:4px solid var(--warning);}
+.scope-card.red{border-top:4px solid var(--danger);}
+.scope-card h4{font-size:13px;margin-bottom:8px;}
+.scope-card ul{list-style:none;font-size:12px;color:var(--text-muted);}
+.scope-card ul li{padding:3px 0;border-bottom:1px solid #f0f0f0;}
+.phase-flow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;align-items:center;}
+.phase-item{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:10px 14px;min-width:130px;flex:1;}
+.phase-item.active{border-color:var(--primary);}
+.phase-num{font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:4px;}
+.phase-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.phase-desc{font-size:11px;color:var(--text-muted);}
+.arrow{color:var(--text-muted);font-size:20px;flex-shrink:0;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.section-num{background:var(--primary);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+ul.check{list-style:none;padding:0;}
+ul.check li{padding:4px 0 4px 24px;position:relative;font-size:13px;}
+ul.check li::before{content:"✅";position:absolute;left:0;}
+ul.check li.no::before{content:"❌";}
+ul.check li.part::before{content:"⚠️";}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-header">
+    <div class="nav-logo">BPA 진해신항 ECS</div>
+    <div class="nav-title">개발자 가이드<br>DGT 1단계</div>
+    <span class="nav-badge">v1.5 Rev.1 · 2026.04.08</span>
+  </div>
+  <div class="nav-section">개요</div>
+  <a class="nav-item" href="#overview">00 개요 및 핵심 결론</a>
+  <a class="nav-item sub" href="#scope">1단계 범위 확정</a>
+  <a class="nav-item sub" href="#proto-map">프로토콜 매핑 요약</a>
+  <div class="nav-section">아키텍처</div>
+  <a class="nav-item" href="#arch">01 시스템 아키텍처</a>
+  <a class="nav-item sub" href="#layer">5-Layer MSA</a>
+  <a class="nav-item sub" href="#components">Core 컴포넌트</a>
+  <a class="nav-item sub" href="#grpc-internal">gRPC 내부 통신</a>
+  <div class="nav-section">Protocol Adapter</div>
+  <a class="nav-item" href="#adapters">02 Protocol Adapter</a>
+  <a class="nav-item sub" href="#sts-adapter">STS SEOHO Socket</a>
+  <a class="nav-item sub" href="#armg-adapter">ARMG SEOHO Socket</a>
+  <a class="nav-item sub" href="#fms-adapter">AGV Rotem REST</a>
+  <a class="nav-item sub" href="#tos-adapter">TOS JSON-RPC 2.0</a>
+  <div class="nav-section">Core 컴포넌트</div>
+  <a class="nav-item" href="#scheduler">03 Task Scheduler</a>
+  <a class="nav-item" href="#dispatcher">04 Dispatcher M1</a>
+  <a class="nav-item sub" href="#etw-eta">ETW/ETA 계산</a>
+  <a class="nav-item" href="#state-mgr">05 State Manager M2</a>
+  <a class="nav-item sub" href="#redis-keys">Redis SSOT</a>
+  <a class="nav-item sub" href="#anomaly">Anomaly Detection</a>
+  <a class="nav-item" href="#orchestrator">06 Orchestrator M3</a>
+  <a class="nav-item sub" href="#handshake">Handshake 분기</a>
+  <a class="nav-item sub" href="#complete-cond">완료 이중 확인</a>
+  <div class="nav-section">시나리오</div>
+  <a class="nav-item" href="#ds">07 DS 양하</a>
+  <a class="nav-item" href="#ld">08 LD 적하</a>
+  <a class="nav-item" href="#gi">09 GI Gate In</a>
+  <a class="nav-item" href="#go">10 GO Gate Out</a>
+  <a class="nav-item" href="#gc">11 GC Gate Out Cancel</a>
+  <div class="nav-section">구현 가이드</div>
+  <a class="nav-item" href="#replan">12 Replan Engine</a>
+  <a class="nav-item" href="#ddl">13 PostgreSQL DDL</a>
+  <a class="nav-item" href="#redis-schema">14 Redis 키 체계</a>
+  <a class="nav-item" href="#kafka-schema">15 Kafka 이벤트 스키마</a>
+  <a class="nav-item" href="#grpc-proto">16 gRPC Proto 정의</a>
+  <a class="nav-item" href="#error-policy">17 에러 처리 정책</a>
+  <a class="nav-item" href="#params">18 운영 파라미터</a>
+  <a class="nav-item" href="#extension">19 Extension Service</a>
+  <a class="nav-item" href="#observability">20 Observability</a>
+  <a class="nav-item" href="#checklist">21 개발 체크리스트</a>
+  <a class="nav-item" href="#action">22 Action Items</a>
+</nav>
+
+<main>
+<div class="hero">
+  <div class="hero-badge">DGT 1단계 적용 · 개발자 가이드</div>
+  <h1>ECS Core 개발자 가이드</h1>
+  <div class="hero-sub">동원글로벌터미널(DGT) 1단계 구현 — SEOHO Socket(STS+ARMG) · Rotem REST(AGV) · JSON-RPC 2.0 <span style="background:#C0392B;color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:8px;">Rev.1 프로토콜 정정</span></div>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><span>버전</span>v1.5 Rev.1 DGT</div>
+    <div class="hero-meta-item"><span>작성일</span>2026.04.08</div>
+    <div class="hero-meta-item"><span>기획</span>CLT (CyberLogitec)</div>
+    <div class="hero-meta-item"><span>개발</span>OpenSG</div>
+    <div class="hero-meta-item"><span>테스트베드</span>DGT (동원글로벌터미널)</div>
+    <div class="hero-meta-item"><span>배포 목표</span>2026 Q2</div>
+  </div>
+</div>
+<div class="content">
+
+<!-- 00 개요 -->
+<section id="overview" class="section-anchor">
+<div class="section-header"><div class="section-num">00</div><h1>개요 및 핵심 결론</h1></div>
+<div class="callout danger">
+<strong>⚠️ 표준 설계 ≠ DGT 실제 개발 — 2026.04.08 CLT 공식 확정 (Rev.1 프로토콜 정정 포함)</strong>
+표준 설계(v1.5)의 프로토콜(OPC-UA)은 개념 참조용입니다. DGT 1단계 개발은 아래 프로토콜로 완전히 대체됩니다. <strong>DGT 인터페이스 정의서 + 본 문서가 실제 개발 계약 기준</strong>입니다.
+<br><br>🔴 <strong>Rev.1 핵심 정정:</strong> ARMG = Rotem REST(❌ 잘못됨) → <strong>SEOHO TCP Socket</strong> ✅ / AGV = MQTT(❌ 잘못됨) → <strong>Rotem REST API</strong> ✅
+</div>
+
+<h2 id="proto-map">프로토콜 매핑 요약</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>연계 대상</th><th>표준 설계 (개념 참조)</th><th>DGT 실제 구현 (계약 기준)</th><th>서버/클라이언트</th></tr></thead>
+<tbody>
+<tr><td><strong>TOS ↔ ECS</strong></td><td>REST/JSON-RPC</td><td><strong>JSON-RPC 2.0</strong> (jsonrpc.org 표준 + DGT Envelope)</td><td>TOS=Client / ECS=Server</td></tr>
+<tr><td><strong>ECS ↔ STS (SEOHO)</strong></td><td>OPC-UA 100ms</td><td><strong>TCP Socket</strong> — SEOHO Custom Frame</td><td>ECS=Client / SEOHO=Server</td></tr>
+<tr><td><strong>ECS ↔ ARMG (SEOHO)</strong></td><td>OPC-UA 100ms</td><td><strong>TCP Socket</strong> — SEOHO Custom Frame (STS와 동일 방식)</td><td>ECS=Client / SEOHO=Server</td></tr>
+<tr><td><strong>ECS ↔ AGV (Rotem REST)</strong></td><td>MQTT (EMQ X)</td><td><strong>REST API (HTTP)</strong> — Rotem 장비 사양</td><td>ECS=Client / Rotem=Server</td></tr>
+<tr><td><strong>Core 내부 통신</strong></td><td>gRPC</td><td><strong>gRPC (동일)</strong></td><td>—</td></tr>
+<tr><td><strong>이벤트 버스</strong></td><td>Kafka</td><td><strong>Kafka (동일)</strong> — 내부 이벤트 전용</td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="scope">1단계 과제 범위 확정</h2>
+<div class="scope-grid">
+<div class="scope-card green"><h4>✅ 1단계 포함</h4><ul>
+<li>Core 4종 (Scheduler/Dispatcher/SM/Orch)</li><li>TOS JSON-RPC 2.0 연동</li>
+<li>STS SEOHO Socket 연동</li><li>ARMG Rotem REST 연동</li>
+<li>AGV Rotem REST API 연동</li><li>DS 시나리오 (1차/2차 AGV 분리)</li>
+<li>GI / GO / GC 기본 흐름</li><li>Replan: Timeout/Rescue/단순 재할당</li>
+<li>PostgreSQL DDL + Redis + Kafka</li><li>Extension API 껍데기 설계</li>
+<li>SIT 기본 케이스 P1</li>
+</ul></div>
+<div class="scope-card amber"><h4>⚠️ 1단계 껍데기만</h4><ul>
+<li>Gate Service (Mock API 구조)</li><li>OCR Service (MATCH 고정 응답)</li>
+<li>LSTP Service (OK 응답만)</li><li>운영자 UI (기본 모니터링)</li>
+<li>Extension API 내부 계약 구조</li>
+</ul></div>
+<div class="scope-card red"><h4>❌ 2단계 이후</h4><ul>
+<li>AutoGate 실장비 연동</li><li>OCR 카메라 실연동/AI 판독</li>
+<li>Reefer Service</li><li>BMS Service</li>
+<li>복합 다중 Task Replan</li><li>AI 기반 최적화 (3단계)</li>
+</ul></div>
+</div>
+</section>
+
+<!-- 01 아키텍처 -->
+<section id="arch" class="section-anchor">
+<div class="section-header"><div class="section-num">01</div><h1>시스템 아키텍처</h1></div>
+
+<h2 id="layer">5-Layer MSA 아키텍처 (DGT 적용)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>레이어</th><th>핵심 책임</th><th>주요 기술 (DGT 1단계)</th></tr></thead>
+<tbody>
+<tr><td><strong>Layer 1 Connectivity</strong></td><td>프로토콜 변환, 장비 연결. <strong>비즈니스 로직 포함 금지.</strong></td><td>Netty (SEOHO STS Socket), Netty (SEOHO ARMG Socket), Spring WebClient (Rotem AGV REST)</td></tr>
+<tr><td><strong>Layer 2 Application</strong></td><td>실행 의사결정 (ECS Core 4 컴포넌트)</td><td>Java 17, Spring Boot 3.2.x, gRPC 1.62.x</td></tr>
+<tr><td><strong>Layer 3 Event Backbone</strong></td><td>비동기 이벤트, 이력, 감사. <strong>장비 제어 사용 금지.</strong></td><td>Apache Kafka 3.7.x (KRaft 모드 권장)</td></tr>
+<tr><td><strong>Layer 4 Storage</strong></td><td>영속 저장, SSOT 캐시, 우선순위 큐</td><td>PostgreSQL 16, Redis 7.2.x</td></tr>
+<tr><td><strong>Layer 5 Presentation</strong></td><td>운영자 UI. Core API/Read Model만 사용. 장비 직접 제어 금지.</td><td>React 18.x (1단계 기본 UI)</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="components">Core 컴포넌트 책임</h2>
+<div class="grid-2">
+<div class="card"><div class="card-title">🗂️ Task Scheduler (ecs-scheduler)</div>
+<p style="font-size:13px">TOS로부터 JSON-RPC 2.0 WI를 수신하여 정합성 검증 후 Internal Task 생성. 우선순위 큐(Redis Sorted Set) 등록 후 Dispatcher에 gRPC 배차 요청.</p></div>
+<div class="card"><div class="card-title">📡 Dispatcher M1 (ecs-dispatcher)</div>
+<p style="font-size:13px">State Manager SSOT에서 장비 상태 조회. ETW/ETA 산출 및 매칭으로 최적 AGV/ARMG 선정. <strong>DGT 확정: ECS Dispatcher가 AGV 배정 주관. FMS는 경로 제어만.</strong></p></div>
+<div class="card"><div class="card-title">📊 State Manager M2 (ecs-state-manager)</div>
+<p style="font-size:13px">Socket(STS/ARMG)/REST(AGV) Adapter에서 수신한 텔레메트리를 정규화하여 Redis SSOT 저장. 장비 이상 감지(Anomaly Detection) 후 Orchestrator에 gRPC 통보.</p></div>
+<div class="card"><div class="card-title">🎼 Orchestrator M3 (ecs-orchestrator)</div>
+<p style="font-size:13px">배차 결과 수신 후 시나리오별 Phase 시퀀스 실행. Socket(STS/ARMG)/REST(AGV) Adapter 경유 명령 발행. C02-AODR Handshake 3경로 분기. 완료 조건 이중 확인. Replan Engine 운영.</p></div>
+</div>
+
+<h2 id="grpc-internal">Core 내부 gRPC 통신</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>호출 방향</th><th>gRPC Service</th><th>용도</th></tr></thead>
+<tbody>
+<tr><td>Task Scheduler → Dispatcher</td><td><code>TaskAssignmentService.RequestAssignment</code></td><td>배차 요청</td></tr>
+<tr><td>Dispatcher → State Manager</td><td><code>StateQueryService.GetEquipmentState</code></td><td>장비 상태 조회</td></tr>
+<tr><td>Dispatcher → State Manager</td><td><code>StateQueryService.GetAvailableEquipment</code></td><td>가용 장비 목록</td></tr>
+<tr><td>Dispatcher → Orchestrator</td><td><code>ExecutionService.DispatchJob</code></td><td>배차 결과 전달</td></tr>
+<tr><td>Orchestrator → State Manager</td><td><code>StateQueryService.GetCurrentSSoT</code></td><td>SSOT 상태 조회</td></tr>
+<tr><td>State Manager → Orchestrator</td><td><code>EventService.NotifyAnomaly</code></td><td>이상 감지 알림</td></tr>
+</tbody>
+</table></div>
+
+<h2>Kafka 이벤트 발행 (Core → External)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>이벤트</th><th>Kafka Topic</th><th>발행 주체</th></tr></thead>
+<tbody>
+<tr><td>WI 수신</td><td>task.lifecycle (CREATED)</td><td>Task Scheduler</td></tr>
+<tr><td>Task 상태 변경</td><td>task.lifecycle</td><td>Task Scheduler / Orchestrator</td></tr>
+<tr><td>Job 진행 단계</td><td>job.progress</td><td>Orchestrator</td></tr>
+<tr><td>알람 발생</td><td>alarm.events</td><td>State Manager</td></tr>
+<tr><td>Replan 발생</td><td>replan.events</td><td>Orchestrator</td></tr>
+<tr><td>배차 완료</td><td>task.lifecycle (ASSIGNED)</td><td>Dispatcher</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 02 Protocol Adapters -->
+<section id="adapters" class="section-anchor">
+<div class="section-header"><div class="section-num">02</div><h1>Protocol Adapter 상세 구현</h1></div>
+<div class="callout info"><strong>설계 원칙</strong>Adapter는 <strong>프로토콜 변환 · 메시지 정규화 · 연결 관리만</strong> 담당한다. 비즈니스 로직(배차 결정, Task 상태 관리 등) 포함 금지.</div>
+
+<h2 id="sts-adapter">STS-Adapter — SEOHO TCP Socket</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>항목</th><th>내용</th></tr></thead>
+<tbody>
+<tr><td>연결 방식</td><td><strong>ECS = TCP Client / SEOHO STS = TCP Server</strong> (ECS가 능동적으로 접속)</td></tr>
+<tr><td>Transport</td><td>TCP Socket — Long-lived persistent connection (Netty 4.1.x 권장)</td></tr>
+<tr><td>프레임 구조</td><td><code>msgNo | msgId | cmdId | eqpNo | eqpTp | phase | payload(JSON)</code> (정식 스펙 수신 후 확정)</td></tr>
+<tr><td>재연결 정책</td><td>연결 실패 → SOCKET_RECONNECT_INTERVAL_MS(3000ms) 지수 백오프 → SOCKET_MAX_RETRY(10회) → CRITICAL 알람</td></tr>
+<tr><td>통신 타임아웃</td><td>COMM_TIMEOUT_SEC(10s) 내 미수신 → 통신 장애 감지 → State Manager 통보</td></tr>
+</tbody>
+</table></div>
+<div class="callout warning"><strong>⚠️ Action Item — CLT → OpenSG</strong>SEOHO Socket 연결 IP/PORT, 정확한 Frame 구조(Delimiter 방식), Handshake 절차 공식 문서 제공 필요. 제공 전까지는 Emulator 기준으로 개발 진행.</div>
+
+<p><strong>ECS → STS 송신 메시지:</strong></p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>메시지</th><th>msgNo</th><th>시나리오</th><th>eqpTp</th><th>주요 필드</th></tr></thead>
+<tbody>
+<tr><td>Main Trolley 지시</td><td>J02-TODR</td><td>DS (Ship→Platform)</td><td>M</td><td>cmdId, cntrNo, fromBay, fromRow, fromTir, laneNo</td></tr>
+<tr><td>Portal Trolley 지시</td><td>J04-TODR</td><td>DS (Platform→Chassis)</td><td>S</td><td>cmdId, cntrNo, itvNo(AGV ID)</td></tr>
+<tr><td>Portal Trolley 지시</td><td>J05-TODR</td><td>LD (Chassis→Platform)</td><td>S</td><td>cmdId, cntrNo, itvNo(AGV ID)</td></tr>
+<tr><td>Main Trolley 지시</td><td>J03-TODR</td><td>LD (Platform→Ship)</td><td>M</td><td>cmdId, cntrNo, toBay, toRow, toTir</td></tr>
+<tr><td>AGV 정위치 응답</td><td>C02-TRPT</td><td>DS/LD HS 완료</td><td>—</td><td>cmdId, eqpNo, itvNo, clearance(Y/N)</td></tr>
+</tbody>
+</table></div>
+
+<p><strong>STS → ECS 수신 메시지 및 라우팅:</strong></p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>메시지</th><th>라우팅 대상</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td>S01-ARPT</td><td>State Manager</td><td>장비 상태 주기 보고 (100ms). wkr_sts, eqp_sts, hoist_sts, crnt_bay 등</td></tr>
+<tr><td>J02/J04/J05-ARPT</td><td>Orchestrator</td><td>작업 Phase 진행 보고. phase: 0M/1M/2L/3M/4M/5R/6C</td></tr>
+<tr><td>QC-JR001</td><td>Orchestrator</td><td>Job Accept. RSP_CD: 0=OK, else=Reject → 재시도 또는 알람</td></tr>
+<tr><td>QC-JR002~004</td><td>Orchestrator</td><td>Pick Up Start/Done, Set Down Start</td></tr>
+<tr><td>QC-JR005</td><td>Orchestrator</td><td><strong>Job Done ← DS 완료 조건 한 축</strong></td></tr>
+<tr><td>C02-AODR</td><td>Orchestrator (Handshake)</td><td>AGV 정위치 확인 요청. ITV_NO = AGV ID → 경로A 분기</td></tr>
+</tbody>
+</table></div>
+
+<div class="code-label">Java — STS-Adapter 구조 (Netty 기반)</div>
+<pre><code>@Component
+public class StsSocketAdapter extends ChannelInboundHandlerAdapter {
+    private volatile Channel channel;
+
+    // ECS → STS: 송신
+    public void send(String msgNo, String cmdId, String eqpNo, String eqpTp,
+                     Map&lt;String, Object&gt; payload) {
+        SeohoFrame frame = SeohoFrame.builder()
+            .msgNo(msgNo).msgId(UUID.randomUUID().toString())
+            .cmdId(cmdId).eqpNo(eqpNo).eqpTp(eqpTp)
+            .payload(objectMapper.writeValueAsString(payload)).build();
+        channel.writeAndFlush(frame.encode()); // Delimiter/Length-prefix: 스펙 수신 후 확정
+    }
+
+    // STS → ECS: 수신 및 라우팅
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        SeohoFrame frame = (SeohoFrame) msg;
+        auditLogger.log("STS_RX", frame.getRaw());  // 감사 로그 (ecs.audit.log)
+        switch (frame.getMsgNo()) {
+            case "S01-ARPT"  -> stateManager.updateStsState(normalize(frame));
+            case "J02-ARPT", "J04-ARPT", "J05-ARPT" -> orchestrator.onArpt(frame);
+            case "QC-JR001", "QC-JR002", "QC-JR003",
+                 "QC-JR004", "QC-JR005"             -> orchestrator.onQcJr(frame);
+            case "C02-AODR"                          -> orchestrator.onHandshake(frame);
+            default -> log.warn("Unknown STS msgNo: {}", frame.getMsgNo());
+        }
+    }
+
+    // 재연결
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        log.warn("STS Socket disconnected. Scheduling reconnect...");
+        ctx.executor().schedule(this::reconnect, 3000, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        log.error("STS Socket error", cause);
+        alarmService.critical("ANOM-005", "STS_ADAPTER", "Socket error: " + cause.getMessage());
+        ctx.close();
+    }
+}
+</code></pre>
+
+<h2 id="armg-adapter">ARMG-Adapter — SEOHO TCP Socket (Rev.1 정정)</h2>
+<div class="callout danger"><strong>⚠️ Rev.1 핵심 정정 — ARMG는 Rotem REST가 아닌 SEOHO TCP Socket을 사용합니다</strong>
+이전 버전의 Rotem REST API 관련 내용은 전면 폐기합니다. ARMG는 STS와 동일한 SEOHO TCP Socket 방식으로 통신하며, 별도의 Socket 연결을 유지합니다.</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>항목</th><th>내용</th></tr></thead>
+<tbody>
+<tr><td>연결 방식</td><td><strong>ECS = TCP Client / SEOHO ARMG = TCP Server (STS Socket과 별도 연결)</strong></td></tr>
+<tr><td>프레임 구조</td><td><code>{ 필드1^필드2^...^필드N }</code> — STS와 동일한 중괄호+캐럿(^) 구분자</td></tr>
+<tr><td>재연결 정책</td><td>SOCKET_RECONNECT_INTERVAL_MS(3000ms) 지수 백오프 → SOCKET_MAX_RETRY(10회) → CRITICAL 알람</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout warning"><strong>⚠️ Action Item — CLT → OpenSG</strong>SEOHO ARMG Socket 연결 IP/PORT, 프레임 전체 필드 정의, Handshake 절차 공식 문서 제공 필요.</div>
+
+<p><strong>실제 ARMG Socket 메시지 샘플 (^구분자):</strong></p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>메시지</th><th>방향</th><th>실제 샘플</th></tr></thead>
+<tbody>
+<tr><td>J03-TODR</td><td>ECS→ARMG</td><td><code>{ 56d1e4b1-...-dbd2ec78c961^J03-TODR^219^BMOU1088298120250611225231-004458^BMOU1088298^20^GE^8.6^25100^E^L^A^10W^W4^01^10W-W4-01^327^F^A^A10^43^01^3^A10-43-01-3^2025-06-12 00:44:58.013 }</code></td></tr>
+<tr><td>C02-AODR</td><td>ARMG→ECS</td><td><code>{ 25061200445913108^C02-AODR^219^BMOU1088298120250611225231-004458^327^10W^W4^01^2025-06-12 00:44:59.398 }</code></td></tr>
+<tr><td>C02-TRPT</td><td>ECS→ARMG</td><td><code>{ bf79f1bd-...-1a19c5821213^C02-TRPT^219^BMOU1088298120250611225231-004458^327^10W^W4^01^10W-W4-01^2025-06-12 00:44:59.535 }</code></td></tr>
+<tr><td>J03-ARPT</td><td>ARMG→ECS</td><td><code>{ 25061200450113109^J03-ARPT^219^BMOU1088298120250611225231-004458^0M^BMOU1088298^0^A10^41^02^07^A^327^F^219^2025-06-12 00:45:01.413 }</code></td></tr>
+</tbody>
+</table></div>
+
+<p><strong>ARMG → ECS 수신 메시지 및 라우팅 (Socket):</strong></p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>메시지</th><th>라우팅 대상</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td>S01-ARPT</td><td>State Manager</td><td>ARMG 장비 상태 보고 (주기적)</td></tr>
+<tr><td>J01~J07-ARPT</td><td>Orchestrator</td><td>작업 Phase 진행 보고 (0M~6C)</td></tr>
+<tr><td>YC-JR001~005</td><td>Orchestrator</td><td>Accept/PickupStart/Done/SetdownStart/JobDone</td></tr>
+<tr><td>C02-AODR</td><td>Orchestrator (Handshake)</td><td>AGV/XT 정위치 확인 요청. ITV_XT_NO 분석으로 경로 B 또는 C 분기</td></tr>
+<tr><td>J07-AODR</td><td>Orchestrator</td><td>야드 재고 조회 요청</td></tr>
+</tbody>
+</table></div>
+
+<div class="code-label">Java — ARMG Socket Adapter (Netty 기반 — STS와 동일 구조)</div>
+<pre><code>@Component
+public class ArmgSocketAdapter extends ChannelInboundHandlerAdapter {
+    private volatile Channel channel;
+
+    // ECS → ARMG: Socket 송신
+    public void send(String msgNo, String cmdId, String eqpNo, Map&lt;String, Object&gt; payload) {
+        SeohoFrame frame = SeohoFrame.builder()
+            .msgNo(msgNo).msgId(UUID.randomUUID().toString())
+            .cmdId(cmdId).eqpNo(eqpNo)
+            .payload(payload).build();
+        channel.writeAndFlush(frame.encode()); // ^ 구분자 프레임: {msgId^msgNo^eqpNo^...}
+    }
+
+    // ARMG → ECS: 수신 및 라우팅
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        SeohoFrame frame = (SeohoFrame) msg;
+        auditLogger.log("ARMG_RX", frame.getRaw());
+        switch (frame.getMsgNo()) {
+            case "S01-ARPT"  -> stateManager.updateArmgState(normalize(frame));
+            case "J01-ARPT", "J02-ARPT", "J03-ARPT",
+                 "J05-ARPT", "J06-ARPT", "J07-ARPT" -> orchestrator.onArmgArpt(frame);
+            case "YC-JR001", "YC-JR002", "YC-JR003",
+                 "YC-JR004", "YC-JR005"             -> orchestrator.onYcJr(frame);
+            case "C02-AODR"                          -> orchestrator.onHandshake(frame);
+            case "J07-AODR"                          -> orchestrator.onInventoryRequest(frame);
+        }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        log.warn("ARMG Socket disconnected. Scheduling reconnect...");
+        ctx.executor().schedule(this::reconnect, 3000, TimeUnit.MILLISECONDS);
+    }
+}
+</code></pre>
+
+<h2 id="fms-adapter">AGV-Adapter — Rotem REST API (Rev.1 정정)</h2>
+<div class="callout danger"><strong>⚠️ Rev.1 핵심 정정 — AGV는 MQTT가 아닌 Rotem REST API를 사용합니다</strong>
+이전 버전의 MQTT/EMQ X 관련 내용은 전면 폐기합니다. AGV는 Rotem REST API로 통신합니다. ECS가 HTTP Client로 Rotem 서버에 REST 호출합니다.</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>항목</th><th>내용</th></tr></thead>
+<tbody>
+<tr><td>연결 방식</td><td><strong>ECS = HTTP Client / Rotem AGV = HTTP Server</strong></td></tr>
+<tr><td>Transport</td><td>REST API (HTTP/HTTPS) — Spring WebClient 권장</td></tr>
+<tr><td>인증</td><td>Rotem 장비 사양서 기준 (스펙 수신 후 확정)</td></tr>
+<tr><td>ECS→AGV 송신 (POST)</td><td>AT-JS00x (Task 배정/갱신/취소), AT-MS00x (상태 지시), AT-CS00x (제어 신호)</td></tr>
+<tr><td>AGV→ECS 수신</td><td>AT-JR00x (Task 상태 보고), AT-MR00x (AGV 상태/위치/센서) — Callback URL 또는 폴링</td></tr>
+<tr><td>위치 폴링 주기</td><td>AT-MR00x 위치 데이터: 200ms 목표 (기존 MQTT QoS0 동등 주기)</td></tr>
+</tbody>
+</table></div>
+<div class="callout warning"><strong>⚠️ Action Item — CLT → OpenSG</strong>Rotem AGV REST Endpoint 상세 스펙(URL, 인증 방식, AT-JS00x/AT-MS00x/AT-JR00x/AT-MR00x 스키마) 공식 제공 필요. Callback URL 지원 여부도 확인 필요.</div>
+
+<p><strong>AT-JR00x (Task 상태 보고) 주요 status 및 ECS 처리:</strong></p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>status</th><th>의미</th><th>ECS 처리 (Orchestrator)</th></tr></thead>
+<tbody>
+<tr><td>ARRIVE_LANE_ENTRY1</td><td>STS Lane 1번 도착</td><td><strong>DS Phase 3 트리거</strong> (C02-AODR 대기 → Portal Trolley 지시)</td></tr>
+<tr><td>ARRIVE_LANE_ENTRY2</td><td>STS Lane 2번 도착</td><td>Twin 2번째 컨테이너 처리</td></tr>
+<tr><td>APPROACH_YARD</td><td>Yard 방향 30m 전</td><td>ARMG 사전 준비 지시 (J03/J02-TODR 발행 준비)</td></tr>
+<tr><td>ARRIVE_YARD_ENTRY1</td><td>Yard 슬롯 도착</td><td>ARMG Handshake 대기 (C02-AODR 수신 대기)</td></tr>
+<tr><td>WORKING</td><td>LoadCell 값 전송 중</td><td>컨테이너 하중 확인 (DS Phase 3 완료 조건 보조)</td></tr>
+<tr><td>COMPLETE</td><td>Task 완료</td><td><strong>DS Yard 완료 조건 한 축</strong> (YC-JR005와 AND)</td></tr>
+<tr><td>CANCELED</td><td>취소 완료</td><td>Replan 다음 단계 진행 확인</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="tos-adapter">TOS-Adapter — JSON-RPC 2.0</h2>
+<div class="callout warning"><strong>⚠️ Action Item — CLT → OpenSG</strong>TOS JSON-RPC Endpoint URL 및 인증 방식(API Key 또는 JWT) 확정 제공 필요.</div>
+
+<div class="code-label">JSON — TOS → ECS 요청 구조 (setWorkInstruction)</div>
+<pre><code>// 표준 JSON-RPC 2.0 + DGT Envelope (실제 스펙 수신 후 확정)
+{
+  "jsonrpc": "2.0",
+  "method": "setWorkInstruction",
+  "params": {
+    "containerWiRef": "WI-20260408-001",
+    "evntTp": "WI_NEW",
+    "jobTp": "DS",
+    "cntrNo": "MSKU1234567",
+    "cntrLen": 40,
+    "pointOfWork": "QC101",
+    "fromSlot": "VESSEL.022.04.82",
+    "toSlot": "A.101.A.04.2",
+    "priority": 5,
+    "cargoType": "G"
+    // ... CM-JS001 전체 필드 (BPA ECS Work Instruction v1.2 기준)
+  },
+  "id": "uuid-string"
+}
+</code></pre>
+<div class="code-label">JSON — ECS → TOS 응답 구조</div>
+<pre><code>// 성공 응답
+{ "jsonrpc": "2.0", "id": "uuid-string",
+  "result": { "status": "OK", "message": "WI accepted", "taskId": "internal-task-uuid" } }
+
+// 오류 응답 (JSON-RPC 표준 error 코드)
+{ "jsonrpc": "2.0", "id": "uuid-string",
+  "error": { "code": -32602, "message": "Validation failed: cntrNo format invalid" } }
+</code></pre>
+</section>
+
+<!-- 03 Task Scheduler -->
+<section id="scheduler" class="section-anchor">
+<div class="section-header"><div class="section-num">03</div><h1>Task Scheduler</h1></div>
+
+<h2>WI 수신 처리 흐름</h2>
+<div class="phase-flow">
+<div class="phase-item active"><div class="phase-num">Step 1</div><div class="phase-title">JSON-RPC 2.0 수신</div><div class="phase-desc">POST /common/setWorkInstruction</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 2</div><div class="phase-title">evntTp 파싱</div><div class="phase-desc">WI_NEW / WI_UPDATE / CANCEL</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 3</div><div class="phase-title">정합성 검증 (8항목)</div><div class="phase-desc">중복·형식·필수필드</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 4</div><div class="phase-title">Internal Task 생성</div><div class="phase-desc">DB INSERT + Redis 큐 등록</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 5</div><div class="phase-title">gRPC 배차 요청</div><div class="phase-desc">Dispatcher.RequestAssignment</div></div>
+</div>
+
+<h2>WI 정합성 검증 항목 (F-SCH-002)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>검증 항목</th><th>조건</th><th>실패 처리</th></tr></thead>
+<tbody>
+<tr><td>①</td><td>containerWiRef 중복</td><td>Redis 조회 — 이미 처리된 wiRef 확인</td><td>JSON-RPC error (-32600)</td></tr>
+<tr><td>②</td><td>jobTp 유효성</td><td>DS/LD/GI/GO/GC/MI/MO/RH/AH 중 하나</td><td>JSON-RPC error (-32602)</td></tr>
+<tr><td>③</td><td>DS/LD 필수 필드</td><td>pointOfWork NOT NULL, STS 장비 존재 확인</td><td>JSON-RPC error (-32602)</td></tr>
+<tr><td>④</td><td>GI/GO/GC 필수 필드</td><td>truckId NOT NULL, truckTp = 'OT'</td><td>JSON-RPC error (-32602)</td></tr>
+<tr><td>⑤</td><td>cntrNo 형식</td><td><code>[A-Z]{4}[0-9]{7}</code></td><td>JSON-RPC error (-32602)</td></tr>
+<tr><td>⑥</td><td>cntrLen</td><td>IN (20, 40, 45)</td><td>JSON-RPC error (-32602)</td></tr>
+<tr><td>⑦</td><td>fromSlot / toSlot 형식</td><td><code>locTp.loc1.loc2.loc3.loc4</code></td><td>JSON-RPC error (-32602)</td></tr>
+<tr><td>⑧</td><td>cargoType=H (위험물)</td><td>DG 격리 사전 검증 (1단계: 경고 로그만)</td><td>경고 로그 발행</td></tr>
+</tbody>
+</table></div>
+
+<h2>WI evntTp별 처리</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>evntTp</th><th>처리 흐름</th></tr></thead>
+<tbody>
+<tr><td><strong>WI_NEW</strong></td><td>1. 정합성 검증 → 2. work_instruction INSERT → 3. Internal Task 생성 (status=PENDING) → 4. Redis Sorted Set ZADD → 5. gRPC RequestAssignment → 6. Kafka task.lifecycle(CREATED)</td></tr>
+<tr><td><strong>WI_UPDATE</strong></td><td>1. wiRef로 Task 조회 → 2. PENDING/SCHEDULED: 즉시 업데이트 → 3. 진행 중: Orchestrator에 변경 통보 → 4. GO appointment_time 변경 시: 사전배치 타이머 재설정</td></tr>
+<tr><td><strong>CANCEL</strong></td><td>1. wiRef로 Task 조회 → 2. PENDING/SCHEDULED: 즉시 CANCELLED → 3. 진행 중: Orchestrator에 취소 요청(GC 4경로 분기) → 4. COMPLETED: 취소 불가 → JSON-RPC error</td></tr>
+</tbody>
+</table></div>
+
+<h2>우선순위 산정 및 Queue 등록</h2>
+<pre><code>// 우선순위 점수 계산
+priority_score = (WI.priority × 1000) + (1 / 선박_출항_잔여시간_초 × 100)
+// 값 클수록 높은 우선순위
+
+// Redis Sorted Set 등록
+ZADD task_queue {priority_score} {task_id}
+
+// Dispatcher가 큐에서 소비 (ZPOPMAX)
+ZPOPMAX task_queue 1
+</code></pre>
+
+<h2>jobTp별 생성 Task 목록</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>jobTp</th><th>생성 Task (순서)</th><th>task_type</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td rowspan="5"><strong>DS</strong></td><td>① STS Main Trolley</td><td>QC_MAIN</td><td>Phase 1</td></tr>
+<tr><td>② AGV QCDS (병렬)</td><td>AGV</td><td>Phase 2 — Phase 1과 동시 시작</td></tr>
+<tr><td>③ STS Portal Trolley</td><td>QC_PORTAL</td><td>Phase 3</td></tr>
+<tr><td>④ AGV YDGR</td><td>AGV</td><td>Phase 3 완료 후 2차 AGV Task</td></tr>
+<tr><td>⑤ ARMG AGV Unloading</td><td>ARMG_AGV</td><td>Phase 4</td></tr>
+<tr><td rowspan="4"><strong>LD</strong></td><td>① ARMG AGV Loading</td><td>ARMG_AGV</td><td>Phase 1</td></tr>
+<tr><td>② AGV YDPI</td><td>AGV</td><td>Phase 1과 병렬</td></tr>
+<tr><td>③ STS Portal Trolley</td><td>QC_PORTAL</td><td>Phase 3</td></tr>
+<tr><td>④ STS Main Trolley</td><td>QC_MAIN</td><td>Phase 4</td></tr>
+<tr><td><strong>GI</strong></td><td>① ARMG XT Unloading</td><td>ARMG_GATE_IN</td><td>STS/AGV 미사용</td></tr>
+<tr><td><strong>GO</strong></td><td>① ARMG XT Loading</td><td>ARMG_GATE_OUT</td><td>STS/AGV 미사용</td></tr>
+<tr><td><strong>MI/MO/RH/AH</strong></td><td>① ARMG Yard Move</td><td>ARMG_YARD</td><td>—</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 04 Dispatcher -->
+<section id="dispatcher" class="section-anchor">
+<div class="section-header"><div class="section-num">04</div><h1>Dispatcher M1</h1></div>
+<div class="callout success"><strong>DGT 확정 (2026.04.08)</strong>ECS Dispatcher가 AGV 배정을 주관합니다. FMS는 AGV Pool 정보 제공 및 실제 경로 제어만 담당합니다.</div>
+
+<h2 id="etw-eta">ETW/ETA 계산 상세</h2>
+<div class="grid-2">
+<div class="card"><div class="card-title">ETW — Estimated Time to Work</div>
+<pre style="font-size:12px;margin:8px 0 0;background:#1E2D3D;padding:12px;border-radius:6px;"><code>ETW = NOW + remainingTime + ETW_BUFFER_SEC(30s)
+remainingTime = avgCycleTimeSec × (1 - currentPhase/totalPhases)</code></pre>
+<p style="font-size:12px;margin-top:8px;color:#555">STS가 현재 작업을 완료하기까지 예상 시간</p></div>
+<div class="card"><div class="card-title">ETA — Estimated Time of Arrival</div>
+<pre style="font-size:12px;margin:8px 0 0;background:#1E2D3D;padding:12px;border-radius:6px;"><code>occupancy = zone.agvCount / zone.maxCapacity
+congestion = occupancy > 0.8 ? 1.4 : 1.2
+ETA = NOW + (pathDist/agv.speed) × congestion
+// BAT_LOW(&lt;30%): ETA += 60s 패널티</code></pre>
+<p style="font-size:12px;margin-top:8px;color:#555">AGV가 POW(작업 위치)에 도착하기까지 예상 시간</p></div>
+</div>
+<div class="callout info"><strong>DGT 주의사항</strong>ETW/ETA는 정밀 물리 계산이 아닌 <strong>배정 우선순위 점수</strong>로 사용됩니다. Zone 점유율은 State Manager의 <code>zone:state:{zone_id}</code> Redis 키에서 실시간 조회합니다. Zone 구성 및 최대 AGV 수용수 테이블은 CLT/DGT가 제공 예정.</div>
+
+<h2>ETW/ETA 매칭 결정</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>구분</th><th>조건</th><th>판정</th><th>ECS 처리</th></tr></thead>
+<tbody>
+<tr><td>①</td><td>│ETW−ETA│ ≤ ETW_ETA_TOLERANCE(30s)</td><td><strong>최적 매칭</strong></td><td>AGV 배차 확정</td></tr>
+<tr><td>②</td><td>ETW &lt; ETA (STS 대기 가능)</td><td>STS 완료 후 AGV 도착</td><td>더 빠른 AGV 재탐색. 없으면 현재 AGV 수용</td></tr>
+<tr><td>③</td><td>ETW &gt; ETA (AGV 대기 필요)</td><td>AGV 먼저 도착</td><td>POW 대기 지시. ETA Drift &gt; 60s → Replan</td></tr>
+</tbody>
+</table></div>
+
+<h2>장비별 배차 조건</h2>
+<div class="code-label">SQL — STS 배차 조건</div>
+<pre><code>SELECT * FROM equipment_sts
+WHERE eqp_no      = :pointOfWork  -- WI.pointOfWork와 정확히 매칭
+  AND wkr_sts     = 'Y'
+  AND exe_mod     = 'A'
+  AND eqp_ctl_mod = 'A'
+  AND hoist_sts   = 'SH'          -- Safe Height 이상 (AGV 진입 허용)
+  AND eqp_sts NOT IN ('TB', 'OF')
+</code></pre>
+<div class="code-label">SQL — AGV 후보 탐색 (DS/LD만)</div>
+<pre><code>SELECT * FROM equipment_agv
+WHERE at_on         = 'Y'
+  AND workable      = 'Y'
+  AND battery_status NOT IN ('EMERGENCY')
+ORDER BY eta ASC LIMIT 1           -- 최소 ETA 순 정렬
+</code></pre>
+<div class="code-label">SQL — ARMG 배차 조건</div>
+<pre><code>SELECT * FROM equipment_armg
+WHERE wkr_sts = 'Y'
+  AND exe_mod = 'A'
+  AND eqp_sts NOT IN ('TB', 'OF')
+  AND crnt_blk IN (:fromLoc1, :toLoc1)  -- 담당 Block 범위
+-- GI: toSlot 담당 ARMG / GO: fromSlot 담당 ARMG
+</code></pre>
+</section>
+
+<!-- 05 State Manager -->
+<section id="state-mgr" class="section-anchor">
+<div class="section-header"><div class="section-num">05</div><h1>State Manager M2</h1></div>
+
+<h2 id="redis-keys">Redis SSOT 키 체계</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Redis Key</th><th>주요 필드</th><th>TTL</th><th>갱신 주기 (DGT)</th></tr></thead>
+<tbody>
+<tr><td><code>equipment:sts:{eqp_no}</code></td><td>wkr_sts, eqp_sts, hoist_sts, exe_mod, eqp_ctl_mod, cntr_no, crnt_bay, err_cd, updated_at</td><td>60s</td><td>S01-ARPT — SEOHO Socket 이벤트</td></tr>
+<tr><td><code>equipment:armg:{eqp_no}</code></td><td>wkr_sts, eqp_sts, hoist_sts, crnt_blk, crnt_bay_idx_no, crnt_row_idx_no, crnt_tir, err_cd, updated_at</td><td>60s</td><td>YC-MR001 — Rotem REST Callback/폴링</td></tr>
+<tr><td><code>equipment:agv:{at_id}</code></td><td>at_on, workable, at_type, task_no, loc_tp, loc1~4, battery_pct, battery_status, updated_at</td><td>60s</td><td>AT-MR00x — Rotem REST Callback/폴링</td></tr>
+<tr><td><code>equipment:agv:{at_id}.loc</code></td><td>loc1~4, x, y, speed</td><td>10s</td><td>AT-MR00x 위치 — Rotem REST 200ms 폴링</td></tr>
+<tr><td><code>zone:state:{zone_id}</code></td><td>agv_count, max_capacity, occupancy_rate</td><td>30s</td><td>AGV 위치 집계 (ETW/ETA 산출용)</td></tr>
+<tr><td><code>task_queue</code></td><td>Sorted Set: score=priority, member=task_id</td><td>없음</td><td>Task Scheduler ZADD</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="anomaly">Anomaly Detection 규칙</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>규칙 ID</th><th>감지 조건</th><th>심각도</th><th>처리</th></tr></thead>
+<tbody>
+<tr><td>ANOM-001</td><td>STS/ARMG EQP_STS = TB (고장)</td><td><span class="badge badge-crit">CRITICAL</span></td><td>즉시 alarm.events 발행 + Replan 트리거</td></tr>
+<tr><td>ANOM-002</td><td>STS/ARMG WKR_STS = N (비작업)</td><td><span class="badge badge-warn">WARNING</span></td><td>알람 발행 + 배차 후보 목록에서 제외</td></tr>
+<tr><td>ANOM-004</td><td>AGV workable=N (작업 중 고장)</td><td><span class="badge badge-crit">CRITICAL</span></td><td>Task.status 확인 → Rescue Protocol 또는 단순 재배차</td></tr>
+<tr><td>ANOM-005</td><td>Socket/REST 미수신 &gt; COMM_TIMEOUT(10s)</td><td><span class="badge badge-crit">CRITICAL</span></td><td>통신 장애 알람 + Adapter 재연결 트리거</td></tr>
+<tr><td>ANOM-006</td><td>STS HOIST_STS ≠ SH (AGV Zone 내)</td><td><span class="badge badge-crit">CRITICAL</span></td><td>AGV 진입 차단 (AT-MS00x STOP)</td></tr>
+<tr><td>ANOM-008</td><td>│ETW−ETA│ &gt; ETA_DRIFT_THRESHOLD(60s)</td><td><span class="badge badge-warn">WARNING</span></td><td>ETA Drift 알람 → Orchestrator Replan 트리거</td></tr>
+<tr><td>ANOM-009</td><td>Zone 점유율 &gt; ZONE_CONGESTION_THRESHOLD(0.8)</td><td><span class="badge badge-warn">WARNING</span></td><td>우회 경로 계산 → AT-MS00x 경로 갱신</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 06 Orchestrator -->
+<section id="orchestrator" class="section-anchor">
+<div class="section-header"><div class="section-num">06</div><h1>Orchestrator M3</h1></div>
+
+<h2 id="complete-cond">완료 조건 이중 확인 (핵심 안전 기능 — P1)</h2>
+<div class="callout danger"><strong>절대 규칙</strong>모든 시나리오에서 완료 조건은 반드시 <strong>2가지 신호가 모두 수신</strong>되어야 완료 처리합니다. 어느 한쪽만 수신해도 완료 처리 금지. CM-JR001(TOS 완료 보고)은 반드시 이중 확인 후에만 전송합니다.</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>시나리오</th><th>완료 조건 신호 1</th><th>완료 조건 신호 2</th><th>추가 조건</th></tr></thead>
+<tbody>
+<tr><td><strong>DS Quay</strong></td><td>QC-JR005 (jobDone)</td><td>J04-ARPT 6C</td><td>LoadCell 하중 확인</td></tr>
+<tr><td><strong>DS Yard</strong></td><td>YC-JR005 (jobDone)</td><td>AT-JR00x COMPLETE</td><td>—</td></tr>
+<tr><td><strong>LD Quay</strong></td><td>QC-JR005 (jobDone)</td><td>J03-ARPT 6C</td><td>—</td></tr>
+<tr><td><strong>GI</strong></td><td>YC-JR005 (jobDone)</td><td>J06-ARPT 6C</td><td>—</td></tr>
+<tr><td><strong>GO</strong></td><td>YC-JR005 (jobDone)</td><td>J05-ARPT 6C</td><td>—</td></tr>
+<tr><td><strong>MI/MO/RH/AH</strong></td><td>YC-JR005 (jobDone)</td><td>J01-ARPT 6C</td><td>—</td></tr>
+</tbody>
+</table></div>
+
+<h2 id="handshake">C02-AODR Handshake 3경로 분기</h2>
+<div class="code-label">Java — Handshake 분기 로직 (DGT 적용)</div>
+<pre><code>/**
+ * C02-AODR 수신 시 발신 장비 + ITV_XT_NO 분석으로 3경로 분기
+ * - 경로 A: STS 발신 + AGV ID → AGV Handshake (DS/LD Quay)
+ * - 경로 B: ARMG 발신 + AGV ID → ARMG-AGV Handshake (DS/LD Yard)
+ * - 경로 C: ARMG 발신 + 트럭번호 → XT Handshake (GI/GO)
+ */
+public void onHandshakeRequest(HandshakeEvent event) {
+    String eqpNo   = event.getEqpNo();
+    String itvXtNo = event.getItvXtNo();   // C02-AODR.ITV_XT_NO or ITV_NO
+
+    if (isStsEquipment(eqpNo)) {
+        // 경로 A — DS/LD AGV Handshake
+        // STS에서 발신, itvXtNo = AGV ID
+        // 후속: STS-Adapter.send(C02-TRPT) → J04-TODR(DS) or J05-TODR(LD) via Socket
+        agvHandshakeHandler.handle(itvXtNo, event);
+
+    } else if (isArmgEquipment(eqpNo) && isAgvId(itvXtNo)) {
+        // 경로 B — DS/LD ARMG-AGV Handshake
+        // ARMG에서 발신, itvXtNo = AGV ID
+        // 후속: ARMG-Adapter.send(C02-TRPT) → J03-TODR(DS) or J02-TODR(LD) via REST
+        armgAgvHandshakeHandler.handle(itvXtNo, event);
+
+    } else if (isArmgEquipment(eqpNo) && isTruckId(itvXtNo)) {
+        // 경로 C — GI/GO XT Handshake
+        // ARMG에서 발신, itvXtNo = 외부 트럭 번호
+        InternalTask task = taskRepository.findActiveByArmg(eqpNo);
+        if (!itvXtNo.equals(task.getTruckId())) {
+            // truckId 불일치 → CRITICAL 알람 + 거부
+            alarmService.critical("TRUCK_MISMATCH", eqpNo,
+                "Expected: " + task.getTruckId() + " Actual: " + itvXtNo);
+            armgAdapter.sendTrpt(event.getCmdId(), eqpNo, itvXtNo, "N"); // clearance=N
+            return;
+        }
+        xtHandshakeHandler.handle(itvXtNo, event);
+        // 후속: ARMG-Adapter.send(C02-TRPT, clearance=Y) → J05-TODR(GO) or J06-TODR(GI) via Socket
+    }
+}
+</code></pre>
+
+<div class="tbl-wrap"><table>
+<thead><tr><th>조건</th><th>발신 장비</th><th>경로</th><th>후속 명령</th><th>Timeout</th></tr></thead>
+<tbody>
+<tr><td><code>isStsEquipment(eqpNo)</code></td><td>STS</td><td><strong>경로 A</strong></td><td>J04-TODR(DS) / J05-TODR(LD) via Socket</td><td>30s → Rescue</td></tr>
+<tr><td><code>isArmgEquipment && isAgvId</code></td><td>ARMG (AGV ID)</td><td><strong>경로 B</strong></td><td>J03-TODR(DS) / J02-TODR(LD) via Socket</td><td>30s → Rescue</td></tr>
+<tr><td><code>isArmgEquipment && isTruckId</code></td><td>ARMG (트럭번호)</td><td><strong>경로 C</strong></td><td>WI.truckId 검증 → J05/J06-TODR via Socket</td><td>60s → Rescue</td></tr>
+</tbody>
+</table></div>
+
+<h2>ARMG Phase 진행 상태 (J05/J06-ARPT EQP_STS)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Phase</th><th>의미</th><th>대응 YC-JR</th><th>ECS 처리</th></tr></thead>
+<tbody>
+<tr><td><strong>0M</strong></td><td>Move Start</td><td>—</td><td>작업 시작 확인</td></tr>
+<tr><td><strong>1M</strong></td><td>목적지 도착 (XT/AGV 위치)</td><td>—</td><td>XT_YT_NO, FMB 필드 확인</td></tr>
+<tr><td><strong>2L</strong></td><td>Twist Locked (컨테이너 집음)</td><td>YC-JR002</td><td><strong>GI: OCR Service 호출 트리거</strong></td></tr>
+<tr><td><strong>3M</strong></td><td>Setdown 방향 이동</td><td>YC-JR004</td><td>—</td></tr>
+<tr><td><strong>4M</strong></td><td>Setdown 위치 도착</td><td>—</td><td>GO: XT 대기 상태 유지</td></tr>
+<tr><td><strong>5R</strong></td><td>Twist Release</td><td>—</td><td>—</td></tr>
+<tr><td><strong>6C</strong></td><td>Job Complete</td><td>YC-JR005</td><td><strong>완료 조건 한 축</strong></td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 07 DS -->
+<section id="ds" class="section-anchor">
+<div class="section-header"><div class="section-num">07</div><h1>DS 양하 시나리오</h1></div>
+<div class="callout info"><strong>DS 핵심 설계</strong>Phase 1(STS Main Trolley — Socket)과 Phase 2(AGV MQTT 배차)는 <strong>병렬로 동시 시작</strong>합니다. Phase 2 완료(AGV Lane 도착) 후 Phase 1 완료(4M)를 기다려 Phase 3를 트리거합니다. 1차/2차 AGV Task는 Orchestrator-Dispatcher 협력으로 분리 처리합니다.</div>
+
+<h2>DS Phase 상세 (DGT 프로토콜 적용)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Phase</th><th>명칭</th><th>DGT 처리</th><th>완료 조건</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong></td><td>STS Main Trolley</td><td>STS-Adapter.send(<strong>J02-TODR via Socket</strong>) — EQP_TP=M, CNTR_NO, Bay/Row/Tier. 수신: QC-JR001(Accept), J02-ARPT 0M→4M 순차 확인</td><td>J02-ARPT <strong>4M</strong></td></tr>
+<tr><td><strong>2</strong></td><td>AGV 배차 (Phase 1 병렬)</td><td>AGV-Adapter.send(<strong>AT-JS00x via Rotem REST POST</strong>) — taskType=QCDS, locTp=QCTP, loc1=STS_ID. 수신: AT-JR00x ARRIVE_LANE_ENTRY1</td><td>AT-JR00x <strong>ARRIVE_LANE_ENTRY1</strong></td></tr>
+<tr><td><strong>3</strong></td><td>Portal Trolley</td><td>C02-AODR(Socket) 수신 → 경로 A → C02-TRPT 응답 → STS-Adapter.send(<strong>J04-TODR via Socket</strong>) — EQP_TP=S, ITV_NO=AGV_ID</td><td>QC-JR005 AND J04-ARPT <strong>6C</strong> AND LoadCell</td></tr>
+<tr><td><strong>4</strong></td><td>ARMG 야드 적치</td><td>AT-JR00x APPROACH_YARD → J07-AODR(재고확인 REST GET) → C02-AODR(REST Callback, ARMG+AGV ID) → 경로 B → ARMG-Adapter.send(<strong>J03-TODR via Socket</strong>) — fromPosition=WSTP, toPosition=야드슬롯, agvNo<br><small style="color:#888">C02-AODR는 ARMG Socket에서 수신, J03-TODR는 ARMG Socket으로 송신</small></td><td>YC-JR005 AND AT-JR00x <strong>COMPLETE</strong></td></tr>
+</tbody>
+</table></div>
+
+<h2>DS AGV 1차/2차 Task 분리 (핵심)</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>구분</th><th>AT-JS00x 내용</th><th>taskType</th><th>locTp</th><th>트리거 시점</th></tr></thead>
+<tbody>
+<tr><td><strong>1차 AGV Task</strong></td><td>STS Lane으로 이동</td><td>QCDS</td><td>QCTP</td><td>Dispatcher 배차 완료 직후 (Phase 1과 동시 병렬)</td></tr>
+<tr><td><strong>2차 AGV Task</strong></td><td>Yard로 이동</td><td>YDGR</td><td>YARD</td><td>Phase 3 완료 (J04-ARPT 6C) 후 — Dispatcher에 신규 AGV Task 배차 요청</td></tr>
+</tbody>
+</table></div>
+
+<div class="code-label">Java — DS Phase 실행 (예시)</div>
+<pre><code>@Service
+public class DsScenarioExecutor {
+
+    public void execute(InternalTask task, DispatchResult dispatch) {
+        // Phase 1 + 2 병렬 시작
+        CompletableFuture&lt;Void&gt; phase1 = CompletableFuture.runAsync(() ->
+            stsAdapter.send("J02-TODR", dispatch.getCmdId(), dispatch.getStsNo(), "M",
+                Map.of("cntrNo", task.getCntrNo(), "fromBay", task.getFromLoc1(),
+                       "fromRow", task.getFromLoc2(), "fromTir", task.getFromLoc3())));
+
+        CompletableFuture&lt;Void&gt; phase2 = CompletableFuture.runAsync(() ->
+            fmsAdapter.sendAtJs001(dispatch.getAgvNo(), "QCDS", "QCTP", dispatch.getStsNo()));
+
+        // Phase 1 완료(4M) + Phase 2 완료(ARRIVE_LANE_ENTRY1) 모두 대기
+        // 이후 C02-AODR 수신 → Phase 3 진행 (이벤트 기반으로 처리)
+    }
+
+    public void onPhase3Trigger(HandshakeEvent event, InternalTask task) {
+        // Phase 3: Portal Trolley 지시 (C02-AODR 수신 후)
+        stsAdapter.sendTrpt(event.getCmdId(), event.getEqpNo(), event.getItvNo(), "Y");
+        stsAdapter.send("J04-TODR", UUID.randomUUID().toString(), task.getStsNo(), "S",
+            Map.of("cntrNo", task.getCntrNo(), "itvNo", event.getItvNo()));
+    }
+}
+</code></pre>
+</section>
+
+<!-- 08 LD -->
+<section id="ld" class="section-anchor">
+<div class="section-header"><div class="section-num">08</div><h1>LD 적하 시나리오</h1></div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Phase</th><th>명칭</th><th>DGT 처리</th><th>완료 조건</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong></td><td>ARMG Yard→WSTP</td><td>ARMG-Adapter.send(<strong>J02-TODR via Socket</strong>) — fromPosition=야드슬롯, toPosition=WSTP, agvNo. 수신: YC-JR001(Accept), J02-ARPT 0M→4M</td><td>J02-ARPT <strong>4M</strong></td></tr>
+<tr><td><strong>2</strong></td><td>AGV YDPI 배차 (병렬)</td><td>AGV-Adapter.send(<strong>AT-JS00x via Rotem REST POST</strong>) — taskType=YDPI, locTp=YARD. AT-JR00x ARRIVE_YARD_ENTRY1 대기</td><td>AT-JR00x <strong>ARRIVE_YARD_ENTRY1</strong></td></tr>
+<tr><td><strong>3</strong></td><td>ARMG-AGV Handshake</td><td>C02-AODR(REST Callback, ARMG+AGV ID) → 경로 B → C02-TRPT → ARMG-Adapter.send(<strong>J02-TODR 하중 → 완료</strong>)</td><td>YC-JR005 AND J02-ARPT 6C</td></tr>
+<tr><td><strong>4</strong></td><td>AGV→STS Lane 이동</td><td>AGV-Adapter.send(<strong>AT-JS00x QCLD via Rotem REST POST</strong>) — taskType=QCLD, locTp=QCTP. AT-JR00x ARRIVE_LANE_ENTRY1 대기</td><td>AT-JR00x <strong>ARRIVE_LANE_ENTRY1</strong></td></tr>
+<tr><td><strong>5</strong></td><td>STS Portal Trolley</td><td>C02-AODR(Socket) 수신 → 경로 A → STS-Adapter.send(<strong>J05-TODR via Socket</strong>) — EQP_TP=S, ITV_NO=AGV_ID</td><td>QC-JR005 AND J05-ARPT 6C</td></tr>
+<tr><td><strong>6</strong></td><td>STS Main Trolley</td><td>STS-Adapter.send(<strong>J03-TODR via Socket</strong>) — EQP_TP=M, toBay/Row/Tier</td><td>QC-JR005 AND J03-ARPT 6C</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 09 GI -->
+<section id="gi" class="section-anchor">
+<div class="section-header"><div class="section-num">09</div><h1>GI Gate In 시나리오</h1></div>
+<div class="callout info"><strong>GI 특이사항</strong>STS·AGV 미사용. ARMG(Rotem REST)만 관여. Gate/OCR/LSTP는 1단계에서 껍데기(Mock) 구현.</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Phase</th><th>명칭</th><th>DGT 처리</th><th>완료 조건</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>ARMG 배차</td><td>Dispatcher → toSlot 담당 Block ARMG 선정 (ETW/ETA 매칭 불필요)</td><td>ARMG 배차 확정</td></tr>
+<tr><td>2</td><td>재고 확인</td><td>ARMG-Adapter → <strong>J07-AODR via Socket</strong> — toSlot 야드 재고 확인</td><td>J07-TRPT 수신</td></tr>
+<tr><td>3</td><td>XT 도착 대기</td><td>POST <strong>/core/xt/arrived</strong> 수신 대기 (최대 60분). 1단계: 테스트 수동 호출 또는 간단한 HTTP Mock</td><td>/core/xt/arrived 수신</td></tr>
+<tr><td>4</td><td>XT Handshake</td><td>C02-AODR(ARMG Socket) 수신 → <strong>ITV_XT_NO vs WI.truckId 검증</strong> → C02-TRPT(clearance=Y) via REST</td><td>C02-TRPT 전송 완료</td></tr>
+<tr><td>5</td><td>J06-TODR 전송</td><td>ARMG-Adapter.send(<strong>J06-TODR via Socket</strong>) — {xtNo=truckId, fromPosition=LSTP위치, toPosition=야드슬롯, doorDirection, fmb}</td><td>J06-ARPT 0M 수신</td></tr>
+<tr><td>6</td><td>2L OCR 검증</td><td>J06-ARPT 2L 수신 → <strong>POST /core/ocr/result</strong> 호출 → 1단계: Mock MATCH 응답 고정</td><td>OCR MATCH 확인</td></tr>
+<tr><td>7</td><td>완료 처리</td><td><strong>YC-JR005 AND J06-ARPT 6C</strong> → CM-JR001(TOS JSON-RPC) + Gate Service 완료 통보(1단계: 내부 로그)</td><td>YC-JR005 AND J06-ARPT 6C</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 10 GO -->
+<section id="go" class="section-anchor">
+<div class="section-header"><div class="section-num">10</div><h1>GO Gate Out 시나리오</h1></div>
+<div class="callout info"><strong>GO 핵심</strong>appointment_time 기반 <strong>사전 배치</strong>가 핵심입니다. ARMG이 미리 컨테이너를 LSTP로 이동하여 트럭 도착 즉시 상차 가능한 상태를 만듭니다.</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Phase</th><th>명칭</th><th>DGT 처리</th><th>완료 조건</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>재고 확인</td><td>ARMG-Adapter → J07-AODR via Socket — fromSlot 재고 확인</td><td>J07-TRPT 수신</td></tr>
+<tr><td>2</td><td>사전 배치</td><td>appointment_time − 30분 시점: LSTP 슬롯 예약(Mock) + ARMG-Adapter.send(<strong>J05-TODR via Socket</strong>) — {fromPosition=야드슬롯, toPosition=LSTP, xtNo=truckId}</td><td>J05-ARPT <strong>4M</strong> (LSTP 도착, XT 대기 중)</td></tr>
+<tr><td>3</td><td>XT 도착 + HS</td><td>/core/xt/arrived 수신 → C02-AODR(ARMG Socket) → 경로 C → truckId 검증 → C02-TRPT → J05-ARPT 4M→5R→6C</td><td>YC-JR005 AND J05-ARPT <strong>6C</strong></td></tr>
+<tr><td>4</td><td>완료 처리</td><td>CM-JR001(TOS JSON-RPC) + Gate Service 통보(1단계:로그) + LSTP 슬롯 해제(Mock)</td><td>완료</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 11 GC -->
+<section id="gc" class="section-anchor">
+<div class="section-header"><div class="section-num">11</div><h1>GC Gate Out Cancel</h1></div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Task 상태</th><th>처리 방법</th><th>사용 명령 (DGT)</th></tr></thead>
+<tbody>
+<tr><td>PENDING / SCHEDULED</td><td>즉시 CANCELLED, ARMG 배차 해제</td><td>—</td></tr>
+<tr><td>XT_PENDING (2L 이전)</td><td>ARMG 작업 취소 후 원 야드 복귀</td><td><strong>C06-TODR via Socket</strong></td></tr>
+<tr><td>ARMG_IN_PROGRESS (2L 이후)</td><td>J01-TODR 복귀 이적 → 원 슬롯 or 가용 슬롯</td><td><strong>J01-TODR via Socket</strong></td></tr>
+<tr><td>COMPLETED</td><td>GC 불가 → TOS JSON-RPC error 응답</td><td>JSON-RPC error (-32000)</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 12 Replan -->
+<section id="replan" class="section-anchor">
+<div class="section-header"><div class="section-num">12</div><h1>Replan Engine</h1></div>
+<div class="callout success"><strong>DGT 1단계 포함 Replan</strong>① Timeout 감지 및 재시도 ② Rescue Protocol ③ 단순 재할당 (장비 고장 → 대체 장비). 복합 다중 Task 연쇄 재편은 2단계, AI 기반 최적화는 3단계.</div>
+
+<h2>Replan 트리거 조건</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>트리거</th><th>감지</th><th>처리</th></tr></thead>
+<tbody>
+<tr><td>장비 Fault (STS/ARMG)</td><td>ANOM-001: EQP_STS=TB</td><td>STS: Manual 전환 알람 / ARMG: 대체 ARMG 배차</td></tr>
+<tr><td>AGV Fault (픽업 전)</td><td>AT-MR00x workable=N, Task≠WORKING</td><td>AT-CS00x Cancel(Rotem REST POST) → min(ETA) AGV → AT-JS00x 재발</td></tr>
+<tr><td>AGV Fault (적재 중)</td><td>AT-MR00x workable=N, Task=WORKING</td><td><strong>Rescue Protocol</strong></td></tr>
+<tr><td>Handshake Timeout</td><td>C02-AODR 후 30s 내 TRPT 미전송</td><td><strong>Rescue Protocol</strong></td></tr>
+<tr><td>ETA Drift</td><td>│ETW−ETA│ &gt; ETA_DRIFT_THRESHOLD(60s)</td><td>후보 AGV 재탐색 or POW 대기 조정</td></tr>
+<tr><td>ARPT Timeout</td><td>ARPT_TIMEOUT_SEC(60s) 내 미수신</td><td>1회 재조회 → 실패 시 Manual 전환</td></tr>
+<tr><td>XT 미도착</td><td>GATE_XT_ARRIVAL_TIMEOUT_MIN(60분) 초과</td><td>WI 보류 상태로 변경 + TOS JSON-RPC 통보</td></tr>
+<tr><td>Zone 혼잡</td><td>점유율 &gt; 0.8</td><td>AT-MS00x 경로 갱신 (Rotem REST POST)</td></tr>
+</tbody>
+</table></div>
+
+<h2>공통 Replan 처리 순서</h2>
+<div class="phase-flow">
+<div class="phase-item"><div class="phase-num">Step 1</div><div class="phase-title">현재 작업 취소</div><div class="phase-desc">AT-CS00x 또는 C06-TODR</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 2</div><div class="phase-title">대체 장비 조회</div><div class="phase-desc">gRPC GetAvailableEquipment</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 3</div><div class="phase-title">신규 배차 요청</div><div class="phase-desc">새 cmdId 발급 후 RequestAssignment</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 4</div><div class="phase-title">신규 명령 발행</div><div class="phase-desc">J0x-TODR / AT-JS00x</div></div>
+<div class="arrow">→</div>
+<div class="phase-item"><div class="phase-num">Step 5</div><div class="phase-title">TOS 통보 + 감사</div><div class="phase-desc">CM-JR001 + replan.events + DB</div></div>
+</div>
+
+<h2>Rescue Protocol</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>단계</th><th>처리</th><th>DGT 명령</th></tr></thead>
+<tbody>
+<tr><td>Step 1</td><td>AGV 안전구역 이동 지시</td><td>AT-MS00x UPDATE (Rotem REST POST)</td></tr>
+<tr><td>Step 2</td><td>TOS에 상황 통보</td><td>CM-JR001 status=RESCUE (JSON-RPC)</td></tr>
+<tr><td>Step 3</td><td>CRITICAL 알람 발생</td><td>alarm.events Kafka 발행</td></tr>
+<tr><td>Step 4</td><td>운영자 확인 대기</td><td>RESCUE_CONFIRM_TIMEOUT_SEC(300s)</td></tr>
+<tr><td>Step 5-A</td><td>운영자 확인 시: 수동 복구 진행</td><td>운영자 UI 액션</td></tr>
+<tr><td>Step 5-B</td><td>타임아웃 시: 안전 정지 유지 + 에스컬레이션</td><td>추가 CRITICAL 알람</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 13 DDL -->
+<section id="ddl" class="section-anchor">
+<div class="section-header"><div class="section-num">13</div><h1>PostgreSQL DDL</h1></div>
+<div class="code-label">SQL — 핵심 테이블 DDL (DGT 1단계)</div>
+<pre><code>-- Work Instruction (TOS에서 수신한 작업 지시)
+CREATE TABLE work_instruction (
+    wi_ref           VARCHAR(36)  PRIMARY KEY,
+    evnt_tp          VARCHAR(20)  NOT NULL,
+    job_tp           VARCHAR(5)   NOT NULL,
+    cntr_no          VARCHAR(12),
+    cntr_len         SMALLINT,
+    point_of_work    VARCHAR(20),
+    truck_id         VARCHAR(30),
+    truck_tp         VARCHAR(5),
+    from_slot        VARCHAR(100),
+    to_slot          VARCHAR(100),
+    appointment_time TIMESTAMP,
+    priority         SMALLINT    DEFAULT 5,
+    cargo_type       VARCHAR(5),
+    raw_payload      JSONB,
+    created_at       TIMESTAMP   DEFAULT NOW(),
+    updated_at       TIMESTAMP   DEFAULT NOW()
+);
+
+-- Internal Task (ECS 내부 처리 단위)
+CREATE TABLE internal_task (
+    task_id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    wi_ref           VARCHAR(36) NOT NULL REFERENCES work_instruction(wi_ref),
+    job_tp           VARCHAR(5)  NOT NULL,
+    task_type        VARCHAR(30) NOT NULL,
+    status           VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    assigned_sts_id  VARCHAR(10),
+    agv_id           VARCHAR(10),
+    armg_id          VARCHAR(10),
+    cmd_id           UUID,
+    from_loc_tp      VARCHAR(20),
+    from_loc1~4      VARCHAR(30),
+    to_loc_tp        VARCHAR(20),
+    to_loc1~4        VARCHAR(30),
+    truck_id         VARCHAR(30),
+    appointment_time TIMESTAMP,
+    priority         INTEGER,
+    etw              BIGINT,
+    eta              BIGINT,
+    created_at       TIMESTAMP   DEFAULT NOW(),
+    updated_at       TIMESTAMP   DEFAULT NOW()
+);
+
+-- Job Order (장비별 작업 명령)
+CREATE TABLE job_order (
+    job_id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id        UUID        NOT NULL REFERENCES internal_task(task_id),
+    eqp_no         VARCHAR(10) NOT NULL,
+    eqp_type       VARCHAR(10) NOT NULL,
+    job_status     VARCHAR(20) NOT NULL DEFAULT 'SENT',
+    msg_no         VARCHAR(15) NOT NULL,
+    cmd_id         UUID        NOT NULL,
+    from_psn_ctnt  VARCHAR(50),
+    to_psn_ctnt    VARCHAR(50),
+    agv_no         VARCHAR(10),
+    xt_yt_no       VARCHAR(30),
+    fmb            CHAR(1),
+    retry_count    SMALLINT    DEFAULT 0,
+    last_error     TEXT,
+    created_at     TIMESTAMP   DEFAULT NOW(),
+    updated_at     TIMESTAMP   DEFAULT NOW()
+);
+
+-- Replan 로그
+CREATE TABLE replan_log (
+    replan_id     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id       UUID        NOT NULL,
+    trigger_type  VARCHAR(50) NOT NULL,
+    old_eqp_no    VARCHAR(10),
+    new_eqp_no    VARCHAR(10),
+    old_cmd_id    UUID,
+    new_cmd_id    UUID,
+    description   TEXT,
+    created_at    TIMESTAMP   DEFAULT NOW()
+);
+
+-- 운영 파라미터 (실시간 갱신)
+CREATE TABLE operation_parameter (
+    param_key   VARCHAR(100) PRIMARY KEY,
+    param_value VARCHAR(200) NOT NULL,
+    description TEXT,
+    updated_at  TIMESTAMP   DEFAULT NOW()
+);
+
+-- 장비 마스터 (STS)
+CREATE TABLE equipment_sts (
+    eqp_no        VARCHAR(10)  PRIMARY KEY,
+    eqp_name      VARCHAR(50),
+    point_of_work VARCHAR(20),
+    active_yn     CHAR(1)     DEFAULT 'Y',
+    created_at    TIMESTAMP   DEFAULT NOW()
+);
+
+-- 장비 마스터 (ARMG)
+CREATE TABLE equipment_armg (
+    eqp_no         VARCHAR(10) PRIMARY KEY,
+    eqp_name       VARCHAR(50),
+    assigned_block VARCHAR(10),
+    active_yn      CHAR(1)    DEFAULT 'Y',
+    created_at     TIMESTAMP  DEFAULT NOW()
+);
+
+-- 장비 마스터 (AGV)
+CREATE TABLE equipment_agv (
+    at_id      VARCHAR(10) PRIMARY KEY,
+    at_type    VARCHAR(20),
+    active_yn  CHAR(1)    DEFAULT 'Y',
+    created_at TIMESTAMP  DEFAULT NOW()
+);
+
+-- 인덱스
+CREATE INDEX idx_task_wi_ref  ON internal_task(wi_ref);
+CREATE INDEX idx_task_status  ON internal_task(status);
+CREATE INDEX idx_task_armg    ON internal_task(armg_id);
+CREATE INDEX idx_job_task_id  ON job_order(task_id);
+CREATE INDEX idx_job_cmd_id   ON job_order(cmd_id);
+CREATE INDEX idx_job_status   ON job_order(job_status);
+CREATE INDEX idx_replan_task  ON replan_log(task_id);
+</code></pre>
+</section>
+
+<!-- 14 Redis -->
+<section id="redis-schema" class="section-anchor">
+<div class="section-header"><div class="section-num">14</div><h1>Redis 키 체계</h1></div>
+<div class="code-label">Redis — 전체 키 체계 및 예시</div>
+<pre><code># STS 장비 상태 (TTL 60s)
+HSET equipment:sts:QC101
+  wkr_sts Y  eqp_sts NOR  hoist_sts SH  exe_mod A  eqp_ctl_mod A
+  cntr_no MSKU1234567  crnt_bay 022  err_cd ""  updated_at 1712530000000
+
+# ARMG 장비 상태 (TTL 60s)
+HSET equipment:armg:ATC01
+  wkr_sts Y  eqp_sts NOR  hoist_sts SH  crnt_blk A01
+  crnt_bay_idx_no 3  crnt_row_idx_no 5  crnt_tir 2
+  err_cd ""  updated_at 1712530000000
+
+# AGV 상태 (TTL 60s)
+HSET equipment:agv:AT301
+  at_on Y  workable Y  at_type NORMAL  task_no TS-001
+  loc_tp TRANSIT  loc1 A  loc2 01  loc3 ""  loc4 ""
+  battery_pct 75  battery_status NORMAL  updated_at 1712530000000
+
+# AGV 위치 (TTL 10s, 200ms 갱신)
+HSET equipment:agv:AT301.loc
+  loc1 A  loc2 01  x 1234.5  y 5678.9  speed 3.2
+
+# Zone 혼잡도 (TTL 30s, ETW/ETA 산출용)
+HSET zone:state:ZONE_A
+  agv_count 8  max_capacity 15  occupancy_rate 0.53
+
+# 우선순위 큐 (Task Scheduler)
+ZADD task_queue 5100 "task-uuid-001"
+ZADD task_queue 4200 "task-uuid-002"
+
+# 진행 중 Task 상태 캐시 (Orchestrator, TTL 3600s)
+SET task:active:{task_id} "{serialized_task_json}"  EX 3600
+
+# 처리된 wiRef 중복 방지 (TTL 7d)
+SET wi:processed:{wi_ref} "1"  EX 604800
+</code></pre>
+</section>
+
+<!-- 15 Kafka -->
+<section id="kafka-schema" class="section-anchor">
+<div class="section-header"><div class="section-num">15</div><h1>Kafka 이벤트 스키마</h1></div>
+
+<h2>Topic 구성</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Topic</th><th>파티션</th><th>보존</th><th>Key</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td>equipment.telemetry</td><td>12</td><td>7일</td><td>eqpId</td><td>STS·ARMG·AGV 상태 텔레메트리 (State Manager 발행)</td></tr>
+<tr><td>task.lifecycle</td><td>8</td><td>30일</td><td>taskId</td><td>WI→Task 생성·완료 전체 이력</td></tr>
+<tr><td>job.progress</td><td>8</td><td>30일</td><td>jobId</td><td>장비 작업 Phase 진행 단계</td></tr>
+<tr><td>alarm.events</td><td>4</td><td>90일</td><td>alarmId</td><td>알람 발생·해소</td></tr>
+<tr><td>replan.events</td><td>4</td><td>30일</td><td>replanId</td><td>Replan 이벤트</td></tr>
+<tr><td>ecs.audit.log</td><td>8</td><td>365일</td><td>—</td><td>전 메시지 감사 로그 (Immutable)</td></tr>
+</tbody>
+</table></div>
+
+<div class="code-label">JSON — task.lifecycle 이벤트</div>
+<pre><code>{
+  "schema_version": "1.0",
+  "event_id": "uuid",
+  "event_type": "TASK_STATE_CHANGED",
+  "occurred_at": "2026-04-08T09:00:00.000Z",
+  "task_id": "uuid",
+  "wi_ref": "WI-20260408-001",
+  "job_tp": "DS",
+  "prev_status": "SCHEDULED",
+  "curr_status": "AGV_ASSIGNED",
+  "assigned_sts_id": "QC101",
+  "assigned_agv_id": "AT301",
+  "assigned_armg_id": null
+}
+</code></pre>
+<div class="code-label">JSON — alarm.events 이벤트</div>
+<pre><code>{
+  "schema_version": "1.0",
+  "alarm_id": "uuid",
+  "alarm_type": "ANOM-001",
+  "severity": "CRITICAL",
+  "eqp_no": "ATC01",
+  "eqp_type": "ARMG",
+  "task_id": "uuid",
+  "description": "EQP_STS=TB 감지",
+  "occurred_at": "2026-04-08T09:01:00.000Z"
+}
+</code></pre>
+</section>
+
+<!-- 16 gRPC Proto -->
+<section id="grpc-proto" class="section-anchor">
+<div class="section-header"><div class="section-num">16</div><h1>gRPC Proto 정의 (초안)</h1></div>
+<div class="callout warning"><strong>⚠️ 미결사항</strong>gRPC Proto 파일은 OpenSG ↔ CLT 공동 확정 필요. 아래는 설계 기반 초안입니다.</div>
+<div class="code-label">Proto — ECS Core gRPC 서비스 정의</div>
+<pre><code>syntax = "proto3";
+package ecs.core.v1;
+
+// ───────────────────────────────────────
+// Task Scheduler → Dispatcher
+// ───────────────────────────────────────
+service TaskAssignmentService {
+  rpc RequestAssignment (AssignmentRequest) returns (AssignmentResponse);
+}
+message AssignmentRequest {
+  string task_id   = 1; string wi_ref   = 2; string job_tp   = 3;
+  string task_type = 4; string from_loc = 5; string to_loc   = 6;
+  string truck_id  = 7; int64  priority = 8;
+}
+message AssignmentResponse {
+  string sts_no = 1; string agv_no = 2; string armg_no = 3;
+  int64  etw    = 4; int64  eta    = 5;  // Unix timestamp ms
+}
+
+// ───────────────────────────────────────
+// Dispatcher → State Manager
+// ───────────────────────────────────────
+service StateQueryService {
+  rpc GetEquipmentState     (EquipmentStateRequest)     returns (EquipmentStateResponse);
+  rpc GetAvailableEquipment (AvailableEquipmentRequest) returns (AvailableEquipmentResponse);
+  rpc GetCurrentSSoT        (SSoTRequest)               returns (SSoTResponse);
+}
+message EquipmentStateRequest { string eqp_no = 1; string eqp_type = 2; }
+message EquipmentStateResponse {
+  string eqp_no = 1; string wkr_sts = 2; string eqp_sts = 3;
+  string hoist_sts = 4; string crnt_blk = 5;
+  int32  battery_pct = 6; bool   workable = 7;
+}
+
+// ───────────────────────────────────────
+// Dispatcher → Orchestrator
+// ───────────────────────────────────────
+service ExecutionService {
+  rpc DispatchJob (DispatchJobRequest) returns (DispatchJobResponse);
+}
+message DispatchJobRequest {
+  string task_id  = 1; string sts_no  = 2; string agv_no  = 3;
+  string armg_no  = 4; int64  etw     = 5; int64  eta     = 6;
+}
+message DispatchJobResponse { bool success = 1; string message = 2; }
+
+// ───────────────────────────────────────
+// State Manager → Orchestrator
+// ───────────────────────────────────────
+service EventService {
+  rpc NotifyAnomaly (AnomalyEvent) returns (AnomalyAck);
+}
+message AnomalyEvent {
+  string anomaly_id   = 1; string anomaly_type = 2;  // ANOM-001~009
+  string severity     = 3; string eqp_no       = 4;
+  string eqp_type     = 5; string task_id      = 6;
+  string description  = 7;
+}
+message AnomalyAck { bool received = 1; }
+</code></pre>
+</section>
+
+<!-- 17 에러 처리 -->
+<section id="error-policy" class="section-anchor">
+<div class="section-header"><div class="section-num">17</div><h1>에러 처리 정책</h1></div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>에러 유형</th><th>감지 방법</th><th>재시도</th><th>최종 처리</th></tr></thead>
+<tbody>
+<tr><td>STS Socket Reject</td><td>QC-JR001 RSP_CD≠OK</td><td>3회 (2→4→8초 백오프)</td><td>CRITICAL 알람 + Manual 전환</td></tr>
+<tr><td>ARMG REST Reject</td><td>HTTP 4xx/5xx 또는 RSP_CD≠OK</td><td>3회</td><td>대체 ARMG or Manual</td></tr>
+<tr><td>AGV REST Reject</td><td>HTTP 4xx/5xx 오류</td><td>3회 (2000ms 백오프)</td><td>즉시 재전송 후 실패 시 알람</td></tr>
+<tr><td>STS Socket 연결 단절</td><td>TCP Exception / COMM_TIMEOUT(10s)</td><td>3초 간격 × 10회</td><td>CRITICAL 알람 + State Manager 통신장애 처리</td></tr>
+<tr><td>ARMG REST 연결 실패</td><td>HTTP Connection Error</td><td>3회</td><td>CRITICAL 알람 + Manual</td></tr>
+<tr><td>truckId 불일치</td><td>C02-AODR.ITV_XT_NO≠WI.truckId</td><td>0회</td><td>CRITICAL 알람 + C02-TRPT clearance=N 거부</td></tr>
+<tr><td>Handshake Timeout</td><td>30초 내 C02-TRPT 미전송</td><td>0회</td><td>Rescue Protocol</td></tr>
+<tr><td>ARPT Timeout</td><td>ARPT_TIMEOUT_SEC(60s) 내 미수신</td><td>1회 재조회</td><td>Replan 또는 Manual 전환</td></tr>
+<tr><td>XT 미도착</td><td>60분 초과</td><td>0회</td><td>Task WI_HOLD 상태 변경 + TOS JSON-RPC 통보</td></tr>
+<tr><td>JSON-RPC 검증 실패</td><td>정합성 검증 실패</td><td>0회</td><td>JSON-RPC error 응답 + task.lifecycle(VALIDATION_FAILED)</td></tr>
+</tbody>
+</table></div>
+
+<div class="code-label">Java — 재시도 정책 (지수 백오프)</div>
+<pre><code>// 재시도 간격: 2000ms × 2^n = 2000, 4000, 8000ms
+// RETRY_MAX_COUNT = 3 (FMS는 1회 고정)
+
+@Retryable(
+    value = { EquipmentCommandException.class },
+    maxAttempts = 3,
+    backoff = @Backoff(delay = 2000, multiplier = 2.0)
+)
+public void sendCommand(JobOrder order) {
+    // Socket 또는 REST 명령 전송
+}
+
+@Recover
+public void recover(EquipmentCommandException e, JobOrder order) {
+    order.setRetryCount(order.getRetryCount() + 1);
+    jobOrderRepository.save(order);
+    alarmService.critical("CMD_FAILED_MAX_RETRY", order.getEqpNo(),
+        "Command failed after max retries: " + order.getMsgNo());
+    // Manual 전환 요청
+}
+</code></pre>
+</section>
+
+<!-- 18 운영 파라미터 -->
+<section id="params" class="section-anchor">
+<div class="section-header"><div class="section-num">18</div><h1>운영 파라미터</h1></div>
+<p><code>operation_parameter</code> 테이블 관리. 서비스 재시작 없이 실시간 적용 가능. DB 변경 → Spring <code>@ConfigurationProperties</code> 또는 Redis 캐시를 통해 즉시 반영.</p>
+<div class="tbl-wrap"><table>
+<thead><tr><th>파라미터 키</th><th>기본값</th><th>설명</th><th>적용 컴포넌트</th></tr></thead>
+<tbody>
+<tr><td>ETW_BUFFER_SEC</td><td>30</td><td>ETW 안전 버퍼(초)</td><td>Dispatcher</td></tr>
+<tr><td>ETW_ETA_TOLERANCE_SEC</td><td>30</td><td>ETW/ETA 허용 오차(초)</td><td>Dispatcher</td></tr>
+<tr><td>ETA_DRIFT_THRESHOLD_SEC</td><td>60</td><td>ETA Drift Replan 임계치(초)</td><td>Orchestrator</td></tr>
+<tr><td>ETA_CONGESTION_BUFFER</td><td>1.2</td><td>ETA 혼잡 보정 계수 (Zone 점유율 ≤0.8 시)</td><td>Dispatcher</td></tr>
+<tr><td>ETA_CONGESTION_BUFFER_HIGH</td><td>1.4</td><td>ETA 혼잡 보정 계수 (Zone 점유율 &gt;0.8 시)</td><td>Dispatcher</td></tr>
+<tr><td>HANDSHAKE_TIMEOUT_SEC</td><td>30</td><td>AGV C02 Handshake 타임아웃(초)</td><td>Orchestrator</td></tr>
+<tr><td>XT_HANDSHAKE_TIMEOUT_SEC</td><td>60</td><td>XT C02 Handshake 타임아웃(초)</td><td>Orchestrator</td></tr>
+<tr><td>GATE_XT_ARRIVAL_TIMEOUT_MIN</td><td>60</td><td>XT 도착 최대 대기(분)</td><td>Orchestrator</td></tr>
+<tr><td>ARMG_PREPOSITION_MIN_BEFORE_ARRIVAL</td><td>30</td><td>GO 사전 배치 선행 시간(분)</td><td>Orchestrator</td></tr>
+<tr><td>ZONE_CONGESTION_THRESHOLD</td><td>0.8</td><td>Zone 혼잡 임계치 (ETA 보정 계수 전환점)</td><td>State Manager</td></tr>
+<tr><td>COMM_TIMEOUT_SEC</td><td>10</td><td>장비 통신 타임아웃(초) — Socket/REST 미수신</td><td>State Manager</td></tr>
+<tr><td>RETRY_MAX_COUNT</td><td>3</td><td>최대 재시도 횟수 (FMS는 1회 고정)</td><td>Orchestrator</td></tr>
+<tr><td>RETRY_INTERVAL_MS</td><td>2000</td><td>재시도 기본 간격(ms) — 지수 백오프 기준</td><td>Orchestrator</td></tr>
+<tr><td>ARPT_TIMEOUT_SEC</td><td>60</td><td>ARPT 미수신 타임아웃(초)</td><td>Orchestrator</td></tr>
+<tr><td>AGV_COMPLETE_TIMEOUT_SEC</td><td>300</td><td>AT-JR00x COMPLETE 타임아웃(초)</td><td>Orchestrator</td></tr>
+<tr><td>RESCUE_CONFIRM_TIMEOUT_SEC</td><td>300</td><td>Rescue Protocol 운영자 확인 대기(초)</td><td>Orchestrator</td></tr>
+<tr><td>BAT_LOW_THRESHOLD</td><td>30</td><td>저배터리 경고(%)</td><td>Dispatcher</td></tr>
+<tr><td>BAT_CRITICAL_THRESHOLD</td><td>15</td><td>위험 배터리(%)</td><td>Dispatcher</td></tr>
+<tr><td>BAT_LOW_ETA_PENALTY_SEC</td><td>60</td><td>저배터리 AGV ETA 패널티(초)</td><td>Dispatcher</td></tr>
+<tr><td>SOCKET_RECONNECT_INTERVAL_MS</td><td>3000</td><td>STS Socket 재연결 간격(ms)</td><td>STS-Adapter</td></tr>
+<tr><td>SOCKET_MAX_RETRY</td><td>10</td><td>STS Socket 최대 재연결 횟수</td><td>STS-Adapter</td></tr>
+<tr><td>ARMG_POLL_INTERVAL_MS</td><td>500</td><td>ARMG REST 상태 폴링 간격(ms)</td><td>ARMG-Adapter</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<!-- 19 Extension Service -->
+<section id="extension" class="section-anchor">
+<div class="section-header"><div class="section-num">19</div><h1>Extension Service (1단계 껍데기 구현)</h1></div>
+<div class="callout warning"><strong>1단계 구현 원칙</strong>Extension Service는 Core API 인터페이스 구조(껍데기)만 구현합니다. 실제 장비 연동은 2단계. 1단계에서는 Mock 응답으로 Core의 흐름이 막히지 않도록 합니다.</div>
+
+<h2>Core Internal API</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Endpoint</th><th>Method</th><th>설명</th><th>1단계 구현</th><th>요청/응답 예시</th></tr></thead>
+<tbody>
+<tr><td>/core/wi/process</td><td>POST</td><td>GI/GO WI 처리 요청 (Gate Service → Task Scheduler)</td><td>✅ 실구현 — 일반 WI 흐름과 동일</td><td>Request: CM-JS001 payload, Response: { taskId }</td></tr>
+<tr><td>/core/xt/arrived</td><td>POST</td><td>XT 도착 통보 (Gate Service → Orchestrator)</td><td>✅ 실구현 — 테스트용 수동 HTTP 호출</td><td>{ truckId, taskId, arrivedAt }</td></tr>
+<tr><td>/core/task/{taskId}</td><td>GET</td><td>Task 상태 조회</td><td>✅ 실구현</td><td>Response: InternalTask 상태</td></tr>
+<tr><td>/core/ocr/result</td><td>POST</td><td>OCR 결과 전달 (OCR Service → Orchestrator)</td><td>⚠️ Mock — 항상 MATCH 고정</td><td>{ jobId, result:"MATCH", confidence:99.0 }</td></tr>
+<tr><td>/core/dispatch/battery</td><td>PUT</td><td>배터리 상태 갱신 (BMS → Dispatcher)</td><td>⚠️ Mock — 수신 후 로그만</td><td>{ atId, batteryPct, batteryStatus }</td></tr>
+</tbody>
+</table></div>
+
+<div class="code-label">Java — OCR Service Mock Controller (1단계)</div>
+<pre><code>@RestController
+@RequestMapping("/core")
+public class ExtensionMockController {
+
+    // OCR Service — 1단계: 항상 MATCH 반환
+    @PostMapping("/ocr/result")
+    public ResponseEntity&lt;Void&gt; receiveOcrResult(@RequestBody OcrResult result) {
+        log.info("[OCR MOCK] job_id={} expected={} recognized={} result={}",
+            result.getJobId(), result.getExpectedCntrNo(),
+            result.getRecognizedCntrNo(), result.getResult());
+        orchestrator.onOcrResult(result);  // Orchestrator에 결과 전달
+        return ResponseEntity.ok().build();
+    }
+
+    // XT 도착 통보 — 1단계: 수동 HTTP 테스트 가능
+    @PostMapping("/xt/arrived")
+    public ResponseEntity&lt;Void&gt; xtArrived(@RequestBody XtArrivedEvent event) {
+        orchestrator.onXtArrived(event.getTruckId(), event.getTaskId());
+        return ResponseEntity.ok().build();
+    }
+}
+
+// OCR 결과 구조
+@Data
+public class OcrResult {
+    private String jobId;
+    private String expectedCntrNo;
+    private String recognizedCntrNo;
+    private double confidencePct;
+    private String result;  // "MATCH" | "MISMATCH"
+}
+</code></pre>
+</section>
+
+<!-- 20 Observability -->
+<section id="observability" class="section-anchor">
+<div class="section-header"><div class="section-num">20</div><h1>Observability (관측성)</h1></div>
+
+<h2>핵심 Metrics</h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>Metric 이름</th><th>설명</th><th>알람 조건</th></tr></thead>
+<tbody>
+<tr><td>equipment_freshness_ms</td><td>장비 상태 최신성 (마지막 수신 후 경과 시간)</td><td>&gt; 10,000ms → CRITICAL</td></tr>
+<tr><td>task_queue_depth</td><td>Redis 우선순위 큐 대기 Task 수</td><td>&gt; 50 → WARNING</td></tr>
+<tr><td>etw_eta_gap_sec</td><td>│ETW-ETA│ 실시간 값</td><td>&gt; 60s → WARNING</td></tr>
+<tr><td>replan_count_5m</td><td>5분 내 Replan 발생 건수</td><td>&gt; 10 → WARNING</td></tr>
+<tr><td>handshake_timeout_count</td><td>Handshake Timeout 누적 건수</td><td>&gt; 0 → CRITICAL</td></tr>
+<tr><td>command_latency_ms</td><td>명령 발행 지연 시간 (Orch → Adapter)</td><td>&gt; 500ms → WARNING</td></tr>
+<tr><td>socket_connection_status</td><td>STS Socket 연결 상태 (1=연결, 0=단절)</td><td>= 0 → CRITICAL</td></tr>
+<tr><td>armg_rest_error_rate</td><td>ARMG REST API 오류율</td><td>&gt; 5% → WARNING</td></tr>
+</tbody>
+</table></div>
+
+<h2>Distributed Tracing</h2>
+<p>OpenTelemetry를 통해 전체 흐름을 단일 Trace로 연결합니다:</p>
+<pre><code>WI 수신 (JSON-RPC)
+  → Internal Task 생성 (Task Scheduler)
+    → 배차 결정 (Dispatcher)
+      → gRPC DispatchJob
+        → Phase 실행 (Orchestrator)
+          → Socket(STS/ARMG)/REST(AGV) 명령 발행
+            → 완료 조건 확인
+              → CM-JR001 (TOS 완료 보고)
+</code></pre>
+</section>
+
+<!-- 21 체크리스트 -->
+<section id="checklist" class="section-anchor">
+<div class="section-header"><div class="section-num">21</div><h1>개발 체크리스트 (DGT 1단계)</h1></div>
+
+<h3>🔌 Protocol Adapter</h3>
+<ul class="check">
+<li>STS SEOHO Socket Adapter — Netty TCP Client 구현</li>
+<li>STS Socket 재연결 로직 (3초 간격, 최대 10회)</li>
+<li>STS 메시지 파싱 및 라우팅 (S01-ARPT → SM, ARPT/JR → Orch, C02-AODR → Orch)</li>
+<li>ARMG SEOHO Socket Adapter — Netty TCP Client 구현 (STS와 동일 라이브러리, 별도 연결)</li>
+<li>ARMG 메시지 파싱 및 라우팅 (S01-ARPT→SM, ARPT/JR→Orch, C02-AODR→Orch, J07-AODR→Orch)</li>
+<li>ARMG Socket 재연결 로직 (3초 간격, 최대 10회)</li>
+<li>AGV Rotem REST Adapter — Spring WebClient 구현</li>
+<li>TOS JSON-RPC 2.0 Adapter — setWorkInstruction / syncWorkInstruction</li>
+<li>모든 Adapter: 감사 로그 → ecs.audit.log Kafka 발행</li>
+</ul>
+
+<h3>🗂️ Task Scheduler</h3>
+<ul class="check">
+<li>CM-JS001 수신 및 evntTp 파싱 (WI_NEW/UPDATE/CANCEL)</li>
+<li>WI 정합성 검증 8항목 구현</li>
+<li>Internal Task 생성 및 DB INSERT</li>
+<li>Redis Sorted Set 우선순위 큐 등록</li>
+<li>gRPC RequestAssignment 호출</li>
+<li>GO 사전배치 타이머 (appointment_time - 30분)</li>
+<li>WI CANCEL GC 4경로 분기 처리</li>
+</ul>
+
+<h3>📡 Dispatcher M1</h3>
+<ul class="check">
+<li>ETW 산출 로직 (avgCycleTimeSec × remainRatio + buffer)</li>
+<li>ETA 산출 로직 (pathDist/speed × congestion + 배터리 패널티)</li>
+<li>Zone 점유율 조회 (Redis zone:state:{zone_id})</li>
+<li>ETW/ETA 매칭 3가지 케이스 처리</li>
+<li>STS / AGV / ARMG 배차 조건 SQL 구현</li>
+<li>GI/GO ARMG 전용 배차 (ETW/ETA 매칭 없음)</li>
+<li>gRPC DispatchJob → Orchestrator 전달</li>
+</ul>
+
+<h3>📊 State Manager M2</h3>
+<ul class="check">
+<li>STS 상태 정규화 → Redis HSET (equipment:sts:{id}, TTL 60s)</li>
+<li>ARMG 상태 정규화 → Redis HSET (equipment:armg:{id})</li>
+<li>AGV 상태 정규화 → Redis HSET (equipment:agv:{id})</li>
+<li>AGV 위치 정규화 → Redis HSET (equipment:agv:{id}.loc, TTL 10s)</li>
+<li>Zone 혼잡도 집계 → Redis HSET (zone:state:{zone_id})</li>
+<li>Anomaly Detection 7가지 규칙 구현</li>
+<li>gRPC GetEquipmentState / GetAvailableEquipment 서비스 구현</li>
+<li>NotifyAnomaly gRPC → Orchestrator 호출</li>
+<li>Kafka equipment.telemetry 발행</li>
+</ul>
+
+<h3>🎼 Orchestrator M3</h3>
+<ul class="check">
+<li>DS 시나리오 Phase 1~4 구현 (Phase 1+2 병렬 처리)</li>
+<li>DS AGV 1차/2차 Task 분리 처리</li>
+<li>LD 시나리오 Phase 1~6 구현</li>
+<li>GI 시나리오 Phase 1~7 구현</li>
+<li>GO 시나리오 Phase 1~4 구현 (사전 배치)</li>
+<li>GC 4경로 분기 처리</li>
+<li>C02-AODR 3경로 Handshake 분기 로직</li>
+<li>완료 조건 이중 확인 (모든 시나리오)</li>
+<li>CM-JR001 → TOS 완료 보고 (JSON-RPC)</li>
+<li>Replan Engine: Timeout 감지, Rescue Protocol, 단순 재할당</li>
+</ul>
+
+<h3>💾 데이터 / 인프라</h3>
+<ul class="check">
+<li>PostgreSQL DDL 전체 테이블 생성</li>
+<li>Redis 키 체계 구현 (SSOT, 큐, 캐시)</li>
+<li>Kafka Topic 생성 (6개 토픽, 파티션 설정)</li>
+<li>operation_parameter 초기 데이터 INSERT (기본값 19개)</li>
+<li>장비 마스터 데이터 INSERT (STS/ARMG/AGV)</li>
+</ul>
+
+<h3>🔧 Extension Service (껍데기)</h3>
+<ul class="check">
+<li>/core/wi/process — 실구현</li>
+<li>/core/xt/arrived — 실구현 (수동 테스트 가능)</li>
+<li>/core/task/{taskId} — 실구현</li>
+<li class="part">/core/ocr/result — Mock MATCH 고정</li>
+<li class="part">/core/dispatch/battery — Mock 수신 로그만</li>
+<li class="no">Gate Service 실장비 연동 — 2단계</li>
+<li class="no">OCR 카메라 실연동 — 2단계</li>
+</ul>
+</section>
+
+<!-- 22 Action Items -->
+<section id="action" class="section-anchor">
+<div class="section-header"><div class="section-num">22</div><h1>Action Items</h1></div>
+<div class="callout danger"><strong>개발 착수 전 반드시 확정 필요</strong>아래 항목이 해결되기 전까지 해당 모듈은 Emulator 또는 Mock으로 대체하여 개발을 진행합니다.</div>
+<div class="tbl-wrap"><table>
+<thead><tr><th>No</th><th>항목</th><th>현재 상태</th><th>담당</th><th>필요 조치</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>SEOHO STS Socket 연결 스펙</td><td>미공식 제공</td><td>CLT → OpenSG</td><td>IP/PORT, Frame 구조(Delimiter 방식), Handshake 절차 공식 문서 제공</td></tr>
+<tr><td>2</td><td>Rotem ARMG REST Endpoint 스펙</td><td>미공식 제공</td><td>CLT → OpenSG</td><td>Base URL, 인증 방식(Bearer/API Key), 요청/응답 스키마, Callback URL 지원 여부 제공</td></tr>
+<tr><td>3</td><td>TOS JSON-RPC Endpoint URL 및 인증</td><td>미확정</td><td>CLT → OpenSG</td><td>Endpoint URL, 인증 방식(API Key/JWT), TOS Envelope 구조 확정 제공</td></tr>
+<tr><td>4</td><td>ARMG Callback vs 폴링 방식</td><td>미확정</td><td>CLT/Rotem</td><td>Rotem 장비 Callback URL 지원 여부 확인 후 결정</td></tr>
+<tr><td>5</td><td>ETW/ETA Zone 구성 및 최대 AGV 수용수</td><td>미확정</td><td>CLT/DGT → OpenSG</td><td>Zone 구성 테이블(Zone ID, 범위, 최대 AGV 수용수) 공유</td></tr>
+<tr><td>6</td><td>Emulator 우선 연동 대상 선정</td><td>미선정</td><td>OpenSG → CLT</td><td>STS/ARMG/TOS 중 Sprint 1 우선순위 결정 회신</td></tr>
+<tr><td>7</td><td>gRPC Proto 파일 확정</td><td>초안만</td><td>OpenSG ↔ CLT</td><td>Core 컴포넌트 간 gRPC 스키마 공동 확정</td></tr>
+<tr><td>8</td><td>DLQ 처리 정책</td><td>미정의</td><td>CLT</td><td>Dead Letter Queue 재처리 규칙(재처리 주기, 최대 횟수, 알람 조건) 정의</td></tr>
+<tr><td>9</td><td>GI/GO 1단계 수동 트리거 방법</td><td>미합의</td><td>CLT/OpenSG</td><td>테스트 환경에서 /core/xt/arrived 수동 트리거 방법 합의</td></tr>
+<tr><td>10</td><td>OPC-UA Security 정책 (2단계 대비)</td><td>미정의</td><td>CLT</td><td>장비 납품업체 지원 범위 확인 후 None/Basic256Sha256 결정</td></tr>
+</tbody>
+</table></div>
+</section>
+
+</div><!-- /.content -->
+</main>
+<script>
+// 현재 스크롤 위치에 따라 nav 활성화
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
+      const id = e.target.id;
+      const link = document.querySelector('.nav-item[href="#' + id + '"]');
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+document.querySelectorAll('.section-anchor').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
