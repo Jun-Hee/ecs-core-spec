@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>DGT ECS 설계서 — 2차 배포본 (README)</title>
+<style>
+    body {
+        font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+        font-size: 11pt;
+        line-height: 1.6;
+        color: #333333;
+        background-color: #f4f7f6;
+        margin: 0;
+        padding: 40px;
+    }
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 50px 70px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+        color: #1a365d;
+        font-size: 22pt;
+        border-bottom: 3px solid #3182ce;
+        padding-bottom: 15px;
+        margin-top: 0;
+    }
+    h2 {
+        color: #2b6cb0;
+        font-size: 16pt;
+        margin-top: 40px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 10px;
+    }
+    h3 {
+        color: #2d3748;
+        font-size: 13pt;
+        margin-top: 30px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 10.5pt;
+    }
+    th, td {
+        border: 1px solid #cbd5e0;
+        padding: 12px 16px;
+        text-align: left;
+    }
+    th {
+        background-color: #edf2f7;
+        font-weight: bold;
+        color: #2d3748;
+    }
+    tr:nth-child(even) {
+        background-color: #f7fafc;
+    }
+    blockquote {
+        border-left: 5px solid #eb4a4a;
+        margin: 25px 0;
+        padding: 15px 25px;
+        background: #fff5f5;
+        color: #c53030;
+        font-weight: bold;
+        border-radius: 0 6px 6px 0;
+    }
+    pre {
+        background-color: #1a202c;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 10pt;
+        overflow-x: auto;
+    }
+    code {
+        background-color: #edf2f7;
+        color: #c53030;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.95em;
+    }
+    pre code {
+        background-color: transparent;
+        color: inherit;
+        padding: 0;
+    }
+    hr {
+        border: 0;
+        height: 1px;
+        background: #e2e8f0;
+        margin: 40px 0;
+    }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 DGT ECS 설계서 — 2차 배포본 (OPENSG 개발사용)</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>항목</th>
+                    <th>값</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>배포 차수</strong></td>
+                    <td><strong>2차 배포</strong> (1차는 2026-04-01 <code>index1.html</code> v1.5)</td>
+                </tr>
+                <tr>
+                    <td><strong>배포일</strong></td>
+                    <td>2026-06-23</td>
+                </tr>
+                <tr>
+                    <td><strong>수신</strong></td>
+                    <td>오픈에스지(OPENSG) ECS 개발팀</td>
+                </tr>
+                <tr>
+                    <td><strong>발신</strong></td>
+                    <td>CLT ECS Architecture</td>
+                </tr>
+                <tr>
+                    <td><strong>목적</strong></td>
+                    <td><strong>미팅 없이 본 문서만으로 ECS 개발 착수 가능</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>핵심 가치</strong></td>
+                    <td><strong>1차 배포본 v1.5 대비 9개 영역 설계 정정 + Matrix v1.1 23건 반영</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>⚠ 가장 먼저 읽어야 할 곳</h2>
+        <p>1차 배포본(<code>index1.html</code> v1.5, 2026-04-01)을 기준으로 이미 개발 중이시거나, 1차 내용을 알고 계시다면:</p>
+        <blockquote>
+            <p>📕 <strong>HTML 좌측 TOC의 빨간색 "⚠ 1차 배포본 v1.5 대비 변경점 (필독)" 링크를 가장 먼저 클릭하세요.</strong></p>
+        </blockquote>
+        <p>9개 영역에서 무엇이 어떻게 바뀌었는지 대조표로 정리되어 있습니다.</p>
+
+        <hr>
+
+        <h2>🚀 30초 안에 시작하는 법</h2>
+        <h3>1단계 — 이 파일 열기 (가장 중요)</h3>
+<pre><code>📘 <a href="https://jun-hee.github.io/ecs-core-spec/DGT_ECS_Final_Integrated_Design_v2.1.html" target="_new">https://jun-hee.github.io/ecs-core-spec/DGT_ECS_Final_Integrated_Design_v2.1.html</a>
+</code></pre>
+        <p>브라우저로 더블클릭하여 열면 됩니다. 좌측 sticky TOC + 우측 본문 구조의 통합 설계서입니다.</p>
+
+        <h3>2단계 — 학습 순서 선택</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>상황</th>
+                    <th>먼저 볼 것</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1차 배포본 기반으로 이미 개발 중</strong></td>
+                    <td>⚠ "1차 배포본 v1.5 대비 변경점" → ★ "개발자 진입 가이드"</td>
+                </tr>
+                <tr>
+                    <td><strong>처음 보는 개발자</strong></td>
+                    <td>★ "개발자 진입 가이드" → 30분 코스</td>
+                </tr>
+                <tr>
+                    <td><strong>API/스키마만 빨리 보고 싶다</strong></td>
+                    <td>D6-api-spec/openapi.yaml + core.proto</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3단계 — 개발 착수</h3>
+        <p>가이드대로 읽고 나면 바로 개발 가능합니다. 의문이 생기면 본 문서 하단 <strong>"★ 의문 해소 채널"</strong> 섹션의 절차를 따르세요.</p>
+
+        <hr>
+
+        <h2>🔥 1차 배포본 v1.5 대비 9개 영역 정정 (요약)</h2>
+        <p>상세는 HTML의 "⚠ 1차 배포본 v1.5 대비 변경점" 섹션 참조.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>영역</th>
+                    <th>1차 (v1.5)</th>
+                    <th>2차 (현재)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Scheduler 우선순위</td>
+                    <td><code>priority_score</code> 산식 + Redis ZSET</td>
+                    <td><code>craneId</code>별 + <code>orderseq</code> ASC (산식 폐기)</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>식별자</td>
+                    <td><code>Cmd_Id</code> = ECS 생성 UUID</td>
+                    <td><code>commandId = containerWiRef</code>, <code>taskNo = ULID</code> (신규)</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>STS 동시 처리</td>
+                    <td>Main+Portal 트롤리, 장비당 1 active</td>
+                    <td><strong>더블트롤리: Main 1 + Second 1 동시 active</strong></td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Direction</td>
+                    <td>H/L/N 정의만</td>
+                    <td><strong>N → L 디폴트 변환</strong>, FRONT/REAR reject</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Error Code</td>
+                    <td><code>ECS-VAL-001</code> 등 다수 내부 코드</td>
+                    <td><strong>1001/2001/3001</strong> + Batch partial success</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>ETA/ETW 계산</td>
+                    <td>Dispatcher M1 내부 산식</td>
+                    <td>Core 단일 + <strong>FMS 신규 IF 2종</strong></td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>AGV Swap</td>
+                    <td>없음</td>
+                    <td><strong>신규 시나리오</strong> + ledger</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>OCR 컨테이너 변경</td>
+                    <td>즉시 작업 중단</td>
+                    <td><strong>OCR Exchange 패턴</strong> + ledger</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>POW (Point of Work)</td>
+                    <td>DS/LD만 사용</td>
+                    <td><strong>QC/YC 단계별 routing + 상태 전이</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>추가 신규</strong>: BizFlow 5종 (J02/AT-JS001 Reject, S03-ARPT 매칭, AGV Swap, OCR Exchange) + 신규 IF (FMS position·ETW, taskNo Notify, Extension REST 5종, Kafka topic 세분화) + Batch Response 표준</p>
+
+        <hr>
+
+        <h2>📂 패키지 구성</h2>
+<pre><code>OPENSG-ECS-Design-Deploy-2nd/
+│
+├── 📘 DGT_ECS_Final_Integrated_Design_v2.1.html  ← ⭐ SSOT (이것만 읽으면 됨)
+├── 📄 README-START-HERE.md                       ← 본 파일
+├── 📄 EMAIL-RESPONSE-DRAFT.md                    ← (참고) 발신 이메일 초안
+│
+├── 📂 D6-api-spec/                               ← ⭐ 머신리더블 API 사양
+│   ├── openapi.yaml          (REST · 26개 schema · 검증 완료)
+│   ├── core.proto            (gRPC · ECS Core 내부 통신)
+│   ├── audit-topics.md       (Kafka · 10개 topic 계약)
+│   └── README.md             (사용법)
+│
+├── 📂 D7-sequence-diagrams/                      ← ⭐ 시퀀스 다이어그램 원본
+│   ├── *.puml                (PlantUML 7종 소스)
+│   ├── rendered/*.png        (PNG 7종 · HTML에도 인라인됨)
+│   └── 00-overview.md
+│
+├── 📊 D8-operating-parameters-v1.1.xlsx          ← ⭐ 71개 협의 트래커
+├── 📊 D8-operating-parameters-README.md
+│
+├── 📂 reference/                                  ← (참조용) 통합 전 원본
+│   ├── D2-design-document-body.md
+│   ├── D3-canonical-data-dictionary-v1.1.md
+│   ├── D4-common-error-catalog-v1.2.md
+│   ├── D5-patch-notes-v1.2-to-v1.3.md
+│   └── README.md
+│
+└── 📂 optional/                                   ← (선택) 임원 보고/워크숍용
+    ├── OPENSG ECS 설계 반영서 v1.3.pptx          (14매 발표자료)
+    └── W1~W5 워크숍 자료
+</code></pre>
+
+        <hr>
+
+        <h2>🎯 자료별 사용법</h2>
+
+        <h3>⭐ HTML (필수) — 단일 진실 원천 (SSOT)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>어떤 의문이 생기면</th>
+                    <th>어디를 보면 되나</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1차 배포본과 무엇이 다른가</strong></td>
+                    <td>⚠ <strong>1차 배포본 v1.5 대비 변경점 (가장 먼저)</strong></td>
+                </tr>
+                <tr>
+                    <td>ECS 전체 구조가 궁금하다</td>
+                    <td>§4 Target Architecture</td>
+                </tr>
+                <tr>
+                    <td>API 호출 어떻게 하나</td>
+                    <td>§6 REST / gRPC / Kafka</td>
+                </tr>
+                <tr>
+                    <td>WI 데이터 형식</td>
+                    <td>§5 Canonical Data</td>
+                </tr>
+                <tr>
+                    <td>시나리오 흐름 (그림)</td>
+                    <td>§11 핵심 시퀀스 7종</td>
+                </tr>
+                <tr>
+                    <td>Scheduler 동작 방식</td>
+                    <td>§7 Scheduler</td>
+                </tr>
+                <tr>
+                    <td>에러 응답 형식</td>
+                    <td>§13 Error / Retry</td>
+                </tr>
+                <tr>
+                    <td>무엇부터 개발할까</td>
+                    <td>§15 구현 단계</td>
+                </tr>
+                <tr>
+                    <td>23건 OPENSG 질의 답변</td>
+                    <td>§17 Matrix 추적표</td>
+                </tr>
+                <tr>
+                    <td>의문이 생겼다</td>
+                    <td>§19 의문 해소 채널</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>⭐ D6-api-spec/ — 코드 생성용</h3>
+<pre><code class="language-bash"># OpenAPI 클라이언트 자동 생성 (예: TypeScript)
+npx openapi-typescript D6-api-spec/openapi.yaml -o ecs-api.d.ts
+
+# gRPC Java/Kotlin 코드 생성
+protoc --java_out=. D6-api-spec/core.proto
+
+# gRPC Python 생성
+python -m grpc_tools.protoc -I D6-api-spec --python_out=. --grpc_python_out=. core.proto
+</code></pre>
+
+        <h3>⭐ D7-sequence-diagrams/rendered/*.png — 시퀀스 흐름</h3>
+        <p>7개 핵심 시퀀스가 PNG로 제공됩니다. HTML 본문에도 인라인되어 있으나, IDE/문서에 첨부하실 때는 PNG 파일을 직접 사용하세요.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>파일</th>
+                    <th>시나리오</th>
+                    <th>1차 대비</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>01-wi-fanout-orderseq.png</td>
+                    <td>WI fan-out + orderseq 정렬</td>
+                    <td><strong>신규</strong> (priority_score 폐기)</td>
+                </tr>
+                <tr>
+                    <td>02-dispatcher-pow-routing.png</td>
+                    <td>Dispatcher POW 기반 라우팅</td>
+                    <td><strong>신규</strong> (단계별 routing)</td>
+                </tr>
+                <tr>
+                    <td>03-double-trolley-and-at-js001.png</td>
+                    <td>STS 더블트롤리 + AT-JS001</td>
+                    <td><strong>신규</strong> (1 active → 2 active)</td>
+                </tr>
+                <tr>
+                    <td>04-j02-reject-at-js001-parallel.png</td>
+                    <td>J02 Reject / AT-JS001 병렬</td>
+                    <td><strong>신규 시나리오</strong></td>
+                </tr>
+                <tr>
+                    <td>05-s03-arpt-j04-commandid-taskno.png</td>
+                    <td>S03-ARPT → J04 매칭</td>
+                    <td><strong>신규</strong> (commandId/taskNo)</td>
+                </tr>
+                <tr>
+                    <td>06-agv-swap.png</td>
+                    <td>AGV Swap 처리</td>
+                    <td><strong>신규 시나리오</strong></td>
+                </tr>
+                <tr>
+                    <td>07-ocr-exchange.png</td>
+                    <td>OCR 컨테이너 교환</td>
+                    <td><strong>신규</strong> (Exchange 패턴)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>⭐ D8 운영 파라미터 XLSX — 협의 트래커</h3>
+        <p>71개 파라미터가 11개 시트로 정리되어 있습니다. <strong>편집 가능</strong>한 협의 트래커입니다. OPENSG가 검토 후 의견을 셀에 직접 기재하여 회신해주시면, 차기 배포본에 반영됩니다.</p>
+
+        <h3>📂 reference/ — 통합 전 원본 (안전을 위해 보존)</h3>
+        <p>D2~D5는 <strong>모두 본 HTML에 통합</strong>되어 있습니다. 그러나 안전을 위해 통합 전 원본도 함께 동봉합니다. 본 HTML과 충돌하는 경우 <strong>HTML이 우선</strong>합니다.</p>
+
+        <hr>
+
+        <h2>❓ 자주 묻는 질문</h2>
+        <p><strong>Q1. 1차 배포본을 봤었는데, 무엇이 달라졌나?</strong><br>
+        → HTML 좌측 TOC 빨간색 "⚠ 1차 배포본 v1.5 대비 변경점" 클릭. 9개 영역 + 신규 항목을 대조표로 정리해두었습니다.</p>
+
+        <p><strong>Q2. 1차 기준으로 이미 개발 중이다. 어떻게 마이그레이션?</strong><br>
+        → HTML "1차 배포본 v1.5 대비 변경점" 섹션 하단의 "마이그레이션 우선순위" Phase 1/2/3 표를 따르세요.</p>
+
+        <p><strong>Q3. 너무 분량이 많다. 핵심만 빠르게 보고 싶다.</strong><br>
+        → HTML 열고 좌측 TOC "★ 개발자 진입 가이드"의 <strong>30분 코스</strong> 6개 챕터만 읽으세요. 1차 배포본을 알고 계시면 변경점 섹션부터.</p>
+
+        <p><strong>Q4. 본 HTML과 reference/ 폴더의 D2~D5가 다르면?</strong><br>
+        → <strong>HTML이 우선</strong>합니다. D2~D5는 통합 전 원본 보존용입니다.</p>
+
+        <p><strong>Q5. 의문이 생겼는데 미팅 없이 답변받고 싶다.</strong><br>
+        → HTML §19 "의문 해소 채널"의 질의 이메일 또는 이슈 트래커에 등록해주세요. P0는 당일/익일, P1은 3영업일 내 답변드립니다.</p>
+
+        <p><strong>Q6. 다음 배포는 언제?</strong><br>
+        → 매주 금요일 14:00 주간 동기화 회의에서 누적 질의 일괄 답변 후, 3차 배포본에 반영합니다. 긴급(P0)은 즉시 정오표 발행.</p>
+
+
+        <hr>
+
+
+        <p><strong>작성</strong>: CLT ECS Architecture<br>
+        <strong>일자</strong>: 2026-06-23<br>
+        <strong>배포 차수</strong>: 2차 배포본 (1차: 2026-04-01 <code>index1.html</code> v1.5)</p>
+    </div>
+</body>
+</html>
