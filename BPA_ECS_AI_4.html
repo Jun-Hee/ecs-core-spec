@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BPA 진해신항 ECS — 적재위치 · 해측 ARMG 선택 시연</title>
+<style>
+  :root{
+    --bg:#0B2135; --panel:#10304C; --panel2:#0D2944; --line:#1E4870;
+    --ink:#EAF2F8; --ink2:#A9C4D8; --ink3:#6E8EA8;
+    --before:#3E86B5; --after:#C4871A;
+    --ok:#4FB07E; --bad:#D9704F; --gate:#6B7C8C;
+    --mono:"Consolas","D2Coding","Menlo",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+    display:flex;flex-direction:column;overflow:hidden}
+
+  header{padding:12px 22px 10px;border-bottom:1px solid var(--line);
+    background:var(--panel2);display:flex;align-items:flex-start;gap:18px}
+  header h1{margin:0;font-size:21px;font-weight:800;letter-spacing:-.3px}
+  header .sub{margin-top:3px;font-size:13px;color:var(--ink2)}
+  header .sub b{color:var(--after)}
+  .hright{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
+  .pill{font-size:12px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink2);white-space:nowrap}
+  .pill.warn{border-color:#7A5A1E;background:#2E2410;color:#E9BE72}
+
+  .bar{padding:8px 22px;border-bottom:1px solid var(--line);display:flex;gap:9px;
+    align-items:center;flex-wrap:wrap;background:var(--panel2)}
+  .bar button{font:inherit;font-size:12.5px;padding:6px 12px;border-radius:7px;
+    border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
+  .bar button:hover{border-color:#2F6692}
+  .bar button.on{background:var(--after);border-color:var(--after);color:#1A1206;font-weight:700}
+  .bar button.go{background:#1E6B46;border-color:#2A8257;color:#DFF3E8;font-weight:700}
+  .lbl{font-size:11.5px;color:var(--ink3)}
+  .grp{display:flex;gap:6px;align-items:center}
+  .grp+.grp{margin-left:9px;padding-left:11px;border-left:1px solid var(--line)}
+  .seek{flex:1;min-width:150px;accent-color:var(--after)}
+
+  main{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+  .side{padding:12px 20px;display:flex;flex-direction:column;min-height:0;min-width:0;
+    overflow:hidden}
+  .side+.side{border-left:1px solid var(--line)}
+  .side h2{font-size:18px;margin:0 0 2px;font-weight:700}
+  .side .tag{font-size:12.5px;color:var(--ink2);margin-bottom:9px}
+  .side.before h2{color:var(--before)} .side.after h2{color:var(--after)}
+
+  /* ── 터미널 그림 ───────────────────────────────────────────── */
+  .yard{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px 7px;margin-bottom:9px;
+    flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+
+  .quay{position:relative;height:20px;border-radius:4px;background:#14405F;
+    display:flex;align-items:center}
+  .quay .qcap{position:absolute;left:8px;font-size:9.5px;color:#7FB0D4;letter-spacing:.2px}
+  .qc{position:absolute;transform:translateX(-50%);font-size:9.5px;font-weight:700;
+    background:#2B6E9E;color:#E6F2FA;border-radius:3px;padding:1px 6px;white-space:nowrap}
+  .qc.hot{background:var(--before);color:#07243A}
+  .after .qc.hot{background:var(--after);color:#1A1206}
+
+  .apron{position:relative;height:22px;margin:3px 0;border-radius:4px;
+    background:#0F2B45;border:1px dashed #1B4268}
+  .apron .acap{position:absolute;left:8px;top:4px;font-size:9.5px;color:var(--ink3)}
+  .agv{position:absolute;top:6px;width:9px;height:9px;border-radius:2px;
+    transform:translateX(-50%);background:#2B5B85;transition:left .35s linear}
+  .agv.busy{background:var(--before)} .after .agv.busy{background:var(--after)}
+
+  .blocks{display:flex;gap:5px;margin-top:4px;flex:1;min-height:0}
+  .blk{flex:1;min-width:0;border-radius:7px;padding:3px 2px 2px;
+    border:1px solid transparent;background:#0E2B46;
+    display:flex;flex-direction:column;min-height:0}
+  .blk.cand{border-color:#2A5E8C;background:#102F4C}
+  .blk.tos{border-color:var(--before);box-shadow:0 0 0 1px var(--before) inset}
+  .blk.aipick{border-color:var(--after);box-shadow:0 0 0 1px var(--after) inset}
+  .blk .bhd{display:flex;align-items:center;justify-content:center;gap:3px;
+    font-size:10.5px;font-weight:700;color:var(--ink2);margin-bottom:2px}
+  .gchip{font-size:8.5px;font-weight:700;padding:0 3px;border-radius:3px;
+    background:#1B4468;color:#9FCAE8}
+  .blk.gB .gchip{background:#3A3626;color:#D8CB9E}
+
+  .bwrap{position:relative;flex:1;min-height:46px;display:flex;justify-content:center}
+  .baycol{position:relative;width:20px;background:#0B2742;border-radius:3px;
+    padding:1px;display:flex;flex-direction:column;gap:1px}
+  .bay{flex:1;border-radius:1px;background:#15385A}
+  .bay.f{background:#24547F}
+  .rail{position:absolute;top:0;bottom:0;width:2px;background:#163A5C}
+  .rail.l{right:calc(50% + 12px)} .rail.r{left:calc(50% + 12px)}
+  .armg{position:absolute;height:9px;width:13px;border-radius:2px;margin-top:-4px;
+    transition:top .4s cubic-bezier(.4,0,.2,1);border:1px solid #2C6192;background:#153E62}
+  .armg.l{right:calc(50% + 7px)} .armg.r{left:calc(50% + 7px)}
+  .armg.busy{background:var(--before);border-color:var(--before)}
+  .after .armg.busy{background:var(--after);border-color:var(--after)}
+  .armg.gate{border-color:#3C4A57;background:#1A2630}
+  .armg.gate.busy{background:var(--gate);border-color:var(--gate)}
+  .endb{height:7px;border-radius:2px;background:#14405F}
+  .endb.land{background:#3A3626}
+
+  .bft{display:flex;justify-content:center;gap:4px;margin-top:2px;
+    font-size:9.5px;color:var(--ink3);white-space:nowrap}
+  .bft b{color:var(--ink2);font-weight:700}
+  .bft .q{color:var(--after)}
+
+  .ylegend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+    font-size:10px;color:var(--ink3);margin-top:5px}
+  .ylegend i{display:inline-block;width:11px;height:7px;border-radius:2px;
+    vertical-align:middle;margin-right:4px;border:1px solid #2C6192;background:#153E62}
+  .ylegend i.ws{background:var(--before);border-color:var(--before)}
+  .after .ylegend i.ws{background:var(--after);border-color:var(--after)}
+  .ylegend i.gt{background:var(--gate);border-color:var(--gate)}
+
+  /* ── 지표 ──────────────────────────────────────────────────── */
+  .prog{margin-bottom:9px}
+  .prow{display:flex;align-items:baseline;gap:9px;margin-bottom:5px}
+  .pnum{font-size:30px;font-weight:800;line-height:1}
+  .before .pnum{color:var(--before)} .after .pnum{color:var(--after)}
+  .pof{font-size:13px;color:var(--ink2)}
+  .ptrack{height:10px;border-radius:999px;background:#16395A;overflow:hidden}
+  .pfill{height:100%;border-radius:999px;transition:width .3s ease}
+  .before .pfill{background:var(--before)} .after .pfill{background:var(--after)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px}
+  .sv{font-size:18px;font-weight:700;line-height:1.2}
+  .sl{font-size:10.5px;color:var(--ink3);margin-top:2px}
+
+  /* ── 하단 ──────────────────────────────────────────────────── */
+  footer{border-top:1px solid var(--line);background:var(--panel2)}
+  .cap{padding:9px 22px;font-size:14px;border-bottom:1px solid var(--line)}
+  .cap b{color:var(--after)}
+  .dwrap{padding:11px 22px;display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:11px 13px;min-height:104px}
+  .card h3{margin:0 0 8px;font-size:12px;color:var(--ink3);font-weight:600}
+
+  .chain{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12.5px;
+    margin-bottom:8px}
+  .step{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;
+    background:#0E2B46;border:1px solid var(--line)}
+  .step .who{font-size:9.5px;color:var(--ink3);font-weight:700;letter-spacing:.3px}
+  .step.tos{border-color:#2A5E8C} .step.ai{border-color:#7A5A1E}
+  .step.ok{border-color:#2A6B4A} .step.no{border-color:#7A3A2A}
+  .arrow{color:var(--ink3);font-size:11px}
+  .slot{font-family:var(--mono);font-size:12px}
+  .msg{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+
+  table.cand{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:2px}
+  table.cand th{font-weight:600;color:var(--ink3);text-align:right;padding:2px 5px;
+    font-size:10.5px;border-bottom:1px solid var(--line)}
+  table.cand th:first-child{text-align:left}
+  table.cand td{padding:2px 5px;text-align:right;color:var(--ink2);
+    border-bottom:1px solid #15375666}
+  table.cand td:first-child{text-align:left;font-weight:700;color:var(--ink)}
+  table.cand tr.win td{color:var(--after)}
+  table.cand tr.dim td{color:var(--ink3)}
+  .mini{font-size:10px;font-weight:700;padding:0 5px;border-radius:3px;margin-left:4px}
+  .mini.t{background:#1B4468;color:#9FCAE8}
+  .mini.a{background:#4A3410;color:#E9BE72}
+  .models{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+  .models span{font-size:10px;color:var(--ink3);background:#0E2B46;
+    border:1px solid var(--line);border-radius:999px;padding:2px 7px}
+
+  .rrow{display:grid;grid-template-columns:86px 1fr 92px;gap:8px;align-items:center;margin:4px 0}
+  .rlab{font-size:11.5px;color:var(--ink2);text-align:right}
+  .rtrack{height:13px;border-radius:999px;background:#16395A;overflow:hidden}
+  .rfill{height:100%;border-radius:999px;transition:width .4s ease}
+  .rval{font-size:12px;font-weight:700;font-family:var(--mono)}
+  .chip{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px}
+  .chip.b{background:#1B4468;color:#9FCAE8}
+  .chip.a{background:#4A3410;color:#E9BE72}
+
+  .note{padding:8px 22px 11px;font-size:11.5px;color:var(--ink3);
+    border-top:1px solid var(--line);line-height:1.55}
+  .note b{color:var(--after)}
+
+  /* 세로가 짧은 랩탑에서 잘리지 않게 */
+  @media (max-height:900px){
+    .side{padding-block:9px}
+    .pnum{font-size:25px}
+    .stat{padding:6px 9px} .sv{font-size:16px}
+    .card{min-height:92px;padding:9px 12px}
+    .dwrap{padding-block:9px;gap:13px}
+    .cap{padding-block:7px;font-size:13px}
+    .note{padding-block:6px 9px;font-size:11px}
+  }
+  @media (max-height:790px){
+    .bwrap{min-height:40px}
+    .side h2{font-size:16px} .side .tag{margin-bottom:7px}
+    .ylegend{display:none}
+    .models{display:none}
+    .card{min-height:0;padding:8px 11px}
+    .card h3{margin-bottom:6px}
+    .dwrap{padding-block:7px}
+    .cap{padding-block:6px;font-size:12.5px}
+    .chain{margin-bottom:6px}
+    .rrow{margin:3px 0}
+    table.cand tr.hideSm{display:none}
+    .rrow.hideSm{display:none}
+    .note{padding-block:5px 8px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>적재위치 · 해측 ARMG 선택 — AI 적용 전 · 후</h1>
+    <div class="sub">수직터미널 · 블록 6 · ARMG 12기 · AGV 8대 · QC 3기 —
+      다른 것은 <b>어느 블록의 해측 ARMG 가 받는가</b> 하나뿐입니다</div>
+  </div>
+  <div class="hright">
+    <span class="pill warn" id="badge">2차 설계안 개념 시연</span>
+    <span class="pill" id="clock">0분 0초</span>
+  </div>
+</header>
+
+<div class="bar">
+  <span class="lbl">상황</span>
+  <span class="grp" id="scens"></span>
+  <span class="grp">
+    <button id="bGo" class="go">▶ 재생</button>
+    <button id="bPause">⏸ 정지</button>
+    <button id="bReset">↺ 처음부터</button>
+  </span>
+  <span class="grp">
+    <span class="lbl">속도</span>
+    <button data-sp="1">×1</button>
+    <button data-sp="3" class="on">×3</button>
+    <button data-sp="8">×8</button>
+  </span>
+  <input type="range" class="seek" id="seek" min="0" max="100" value="0">
+</div>
+
+<main>
+  <section class="side before" id="paneB">
+    <h2>AI 적용 전</h2>
+    <div class="tag">TOS 가 지시한 적재위치 그대로 — 그 블록의 해측 ARMG 가 받습니다</div>
+    <div class="yard" id="yardB"></div>
+    <div class="prog">
+      <div class="prow"><span class="pnum" id="nB">0</span>
+        <span class="pof">/ <span id="tB">0</span> 건 완료</span></div>
+      <div class="ptrack"><div class="pfill" id="fB" style="width:0"></div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="sv" id="qB">0초</div><div class="sl">안벽(QC) 대기</div></div>
+      <div class="stat"><div class="sv" id="aB">—</div><div class="sl">1건당 평균 소요</div></div>
+      <div class="stat"><div class="sv" id="rB">0</div><div class="sl">재취급 예상</div></div>
+      <div class="stat"><div class="sv" id="eB">—</div><div class="sl">전건 완료 시각</div></div>
+    </div>
+  </section>
+
+  <section class="side after" id="paneA">
+    <h2>AI 권고를 TOS 가 반영했을 때</h2>
+    <div class="tag">AI 가 더 나은 위치를 권고 → TOS 판단 → 수용 시 <b>WI_UPDATE</b></div>
+    <div class="yard" id="yardA"></div>
+    <div class="prog">
+      <div class="prow"><span class="pnum" id="nA">0</span>
+        <span class="pof">/ <span id="tA">0</span> 건 완료</span></div>
+      <div class="ptrack"><div class="pfill" id="fA" style="width:0"></div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="sv" id="qA">0초</div><div class="sl">안벽(QC) 대기</div></div>
+      <div class="stat"><div class="sv" id="aA">—</div><div class="sl">1건당 평균 소요</div></div>
+      <div class="stat"><div class="sv" id="advA">0 / 0</div><div class="sl">위치변경 권고 / TOS 수용</div></div>
+      <div class="stat"><div class="sv" id="eA">—</div><div class="sl">전건 완료 시각</div></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="cap" id="cap">같은 컨테이너가 두 쪽에 동시에 들어갑니다.
+    다른 것은 <b>적재위치를 바꿀 것인가</b> 하나뿐입니다.</div>
+  <div class="dwrap">
+    <div class="card">
+      <h3>이번 컨테이너 — TOS 지시부터 수행까지</h3>
+      <div id="chain"></div>
+    </div>
+    <div class="card">
+      <h3>누적 비교</h3>
+      <div id="rank"></div>
+    </div>
+  </div>
+  <div class="note" id="note"></div>
+</footer>
+
+<script>
+/* ───────────────────────────────────────────────────────────────
+   수직터미널 — 다중 블록 · 다중 ARMG
+   "어느 블록의 해측(WSTP) ARMG 가 이 컨테이너를 받을 것인가"
+
+   그 선택은 곧 '적재 위치를 바꾸는 것' 이므로 ECS 가 임의로 할 수 없다.
+   AI 는 TOS 가 허용한 후보 슬롯 안에서 더 나은 위치를 계산해 권고하고,
+   TOS 가 판단해 수용하면 WI_UPDATE 로 작업지시를 고친다.
+
+       TOS ─CM-JS001(WI_NEW, toSlot, candidateSlots)─> ECS
+       ECS ─snapshot─> AI ─recommendedSlot─> ECS
+       ECS ─권고(신규 메시지)─> TOS ─판단─> 수용 시 CM-JS001(WI_UPDATE)
+       거부하면 원래 위치 그대로 — 운영은 멈추지 않는다
+
+   같은 작업 피드를 두 세계에 똑같이 흘린다. 난수 없음.
+   두 쪽 차이는 '적재 위치(=해측 ARMG)와 AGV' 선택 하나뿐.
+   ─────────────────────────────────────────────────────────────── */
+
+/* 가정값 — 전부 공학적 가정이며 실측 제원이 아니다 */
+var SPEC = {
+  blocks: 6,
+  bays: 40,
+  agvs: 8,
+  qcs: 3,
+  apronM: 1200,        // 안벽 전체 폭 (m)
+  agvMps: 5.0,         // AGV 주행 (m/s)
+  qcPickSec: 25,       // AGV 가 QC 밑에서 받는 시간
+  wsDropSec: 20,       // WSTP 에 내려놓는 시간
+  armgBase: 50,        // ARMG 1사이클 기본 (s)
+  armgPerBay: 1.0,     // 베이 1칸당 추가 (s)
+  qcCycleSec: 70,      // QC 가 컨테이너를 하나 내리는 간격 (s)
+  reshuffleSec: 120,   // 출항 그룹이 어긋나면 적하 때 되꺼내는 비용 (s)
+  reshuffleRisk: 420,  // 점수에 쓰는 회피 가중치. 실제 비용보다 크게 둔다 —
+                       // 재취급은 적하 때 드러나므로 양하 시점에 과감히 피한다
+  wsLo: 1, wsHi: 24,   // 해측 전담 ARMG 의 작업 구간 (베이)
+  lsLo: 17, lsHi: 40,  // 육측 전담 ARMG 의 작업 구간 (베이)
+  gateCycleSec: 115,   // 육측 ARMG 의 게이트 작업 주기 (GI/GO)
+  gateWorkSec: 80,     // 게이트 작업 1건 소요
+  tosRejectEvery: 6,   // TOS 가 내부 제약으로 거부하는 주기 (고정값, 난수 아님)
+};
+
+var QC_X    = [0.18, 0.50, 0.82];                 // 안벽 위 QC 위치 (비율)
+var BLOCK_X = [0.08, 0.24, 0.40, 0.56, 0.72, 0.88];
+/* 블록마다 담당 출항 그룹. 같은 그룹을 모아 쌓아야 적하 때 재취급이 줄어든다.
+   그룹당 블록이 셋이므로, 같은 그룹 안에서도 '어느 블록의 해측 ARMG 인가'
+   라는 선택이 실제로 존재한다 — 여기가 AI 가 기여하는 자리다. */
+var BLOCK_GROUP = ["A", "A", "A", "B", "B", "B"];
+var GROUPS = ["A", "B"];
+
+function nextGroup(g) { return GROUPS[(GROUPS.indexOf(g) + 1) % GROUPS.length]; }
+function distM(x1, x2) { return Math.abs(x1 - x2) * SPEC.apronM; }
+function travelSec(x1, x2) { return distM(x1, x2) / SPEC.agvMps; }
+function slotOf(blockId, bay) {
+  return "YARD." + blockId + "." + String(bay).padStart(2, "0") + ".3.2";
+}
+
+/* ── 작업 피드 — 시나리오별 고정값 ───────────────────────────── */
+var SCENARIOS = {
+  DISCHARGE: {
+    name: "양하 피크",
+    why: "선박 3척에서 동시에 내립니다. 내릴 때마다 적재 위치가 정해져야 합니다.",
+    make: function () {
+      var f = [], id = 1;
+      for (var n = 0; n < 14; n++)
+        for (var q = 0; q < 3; q++)
+          f.push({ id: "C-" + String(id++).padStart(4, "0"), qc: q,
+                   at: 20 + n * SPEC.qcCycleSec + q * 18,
+                   group: GROUPS[(n + q) % GROUPS.length] });
+      return f.sort(function (a, b) { return a.at - b.at; });
+    }
+  },
+  SINGLE_QC: {
+    name: "단일 선석",
+    why: "QC 한 대만 돌립니다. TOS 지시가 가까운 블록 하나에 쏠리기 쉬운 상황입니다.",
+    make: function () {
+      var f = [];
+      for (var n = 0; n < 24; n++)
+        f.push({ id: "C-" + String(n + 1).padStart(4, "0"), qc: 1,
+                 at: 20 + n * 55, group: GROUPS[n % GROUPS.length] });
+      return f;
+    }
+  },
+  SURGE: {
+    name: "과포화",
+    why: "내리는 속도가 야드가 받아낼 수 있는 속도를 넘어섭니다.",
+    make: function () {
+      var f = [], id = 1;
+      for (var n = 0; n < 12; n++)
+        for (var q = 0; q < 3; q++)
+          f.push({ id: "C-" + String(id++).padStart(4, "0"), qc: q,
+                   at: 15 + n * 55 + q * 9,
+                   group: GROUPS[(n * 2 + q) % GROUPS.length] });
+      return f.sort(function (a, b) { return a.at - b.at; });
+    }
+  },
+};
+
+/* ── 세계 하나 만들기 ────────────────────────────────────────── */
+function makeWorld(mode, scenarioId) {
+  var feed = SCENARIOS[scenarioId].make();
+  return {
+    mode: mode,                       // "base" | "ai"
+    t: 0,
+    feed: feed, fi: 0,
+    blocks: BLOCK_X.map(function (x, i) {
+      var id = "A0" + (i + 1);
+      return {
+        id: id, x: x, group: BLOCK_GROUP[i], stored: 0, served: 0,
+        queue: [],                                   // WSTP 에서 대기 중인 컨테이너
+        /* 해측 전담 ARMG — AI 권고가 사실상 고르는 대상 */
+        ws: { id: "YC-" + id + "-1", side: "해측", lo: SPEC.wsLo, hi: SPEC.wsHi,
+              bay: SPEC.wsLo + 2, busyUntil: 0, served: 0, job: null },
+        /* 육측 전담 ARMG — 게이트 작업 전담. AI 판단 대상이 아니다 */
+        ls: { id: "YC-" + id + "-2", side: "육측", lo: SPEC.lsLo, hi: SPEC.lsHi,
+              bay: SPEC.lsHi - 3, busyUntil: 0, served: 0, job: null,
+              phase: i * 19 },
+      };
+    }),
+    agvs: Array.from({ length: SPEC.agvs }, function (_, i) {
+      return { id: "AT-" + (101 + i), x: (i + 0.5) / SPEC.agvs,
+               state: "IDLE", target: null, task: null, until: 0, deadhead: 0 };
+    }),
+    live: [], done: [],
+    waitQc: 0, waitAgv: 0, waitArmg: 0, deadheadM: 0, reshuffle: 0,
+    cycleSum: 0,
+    advised: 0, accepted: 0, rejected: 0, rejectTick: 0,
+    decisions: [], lastDecision: null, finishAt: -1,
+  };
+}
+
+/* ── TOS 가 적재 위치를 정한다 (AI 보다 먼저) ─────────────────
+   TOS 는 출항 그룹과 블록 잔여 용량으로 정한다.
+   ARMG 의 실시간 상태(대기열·잔여시간)는 TOS 가 보지 않는다 — 여기가 틈이다. */
+function tosAssign(w, c) {
+  var same = w.blocks.filter(function (b) { return b.group === c.group; });
+  var pick = same.slice().sort(function (p, q) {
+    if (p.stored !== q.stored) return p.stored - q.stored;
+    return Math.abs(p.x - QC_X[c.qc]) - Math.abs(q.x - QC_X[c.qc]);
+  })[0];
+
+  /* TOS 가 허용한 후보 슬롯 — 같은 출항 그룹 블록 전부(3) +
+     비상용으로 타 그룹 중 가장 여유 있는 블록 하나(재취급 위험 표시).
+     AI 는 이 안에서만 고른다. 후보 생성 책임은 TOS 에 있다. */
+  var adj = nextGroup(c.group);
+  var spare = w.blocks.filter(function (b) { return b.group === adj; })
+    .slice().sort(function (p, q) { return p.stored - q.stored; })[0];
+  var allowed = same.map(function (b) { return b.id; });
+  if (spare) allowed.push(spare.id);
+
+  return { block: pick.id, bay: nextBay(pick), allowed: allowed };
+}
+
+function nextBay(b) {
+  var span = SPEC.wsHi - SPEC.wsLo + 1;
+  return SPEC.wsLo + (b.stored % span);
+}
+
+/* ── 예측 모델 ───────────────────────────────────────────────── */
+
+/* P1 해측 ARMG 가용시각 + P2 대기열 소진 */
+function predWsReady(w, b) {
+  var drain = b.queue.length * (SPEC.armgBase + b.ws.bay * SPEC.armgPerBay);
+  return Math.max(w.t, b.ws.busyUntil) + drain;
+}
+/* P3 AGV 도착 예측 — QC 까지 */
+function predAgvToQc(w, a, qcX) {
+  return Math.max(w.t, a.until) + travelSec(a.x, qcX);
+}
+/* P4 블록 혼잡 예보 — 지금 쌓인 대기 + 곧 들어올 양 */
+function predCongestion(w, b) {
+  var incoming = w.live.filter(function (c) { return c.block === b.id; }).length;
+  return b.queue.length + incoming * 0.6;
+}
+/* P5 재취급 위험 — 출항 그룹이 다른 블록에 넣으면 적하 때 되꺼낸다 */
+function predReshuffle(b, c) { return b.group === c.group ? 0 : 1; }
+
+/* ── 의사결정 ────────────────────────────────────────────────── */
+function decide(w, c) {
+  var qcX = QC_X[c.qc];
+  var free = w.agvs.filter(function (a) { return a.state === "IDLE"; });
+  if (!free.length) return null;
+
+  var rows = [];
+  w.blocks.forEach(function (b) {
+    if (c.tos.allowed.indexOf(b.id) < 0) return;      // TOS 후보 밖 — 보지 않는다
+    free.forEach(function (a) {
+      var etaQc  = predAgvToQc(w, a, qcX);
+      var etaWs  = etaQc + SPEC.qcPickSec + travelSec(qcX, b.x);
+      var ready  = predWsReady(w, b);
+      var start  = Math.max(etaWs, ready);            // 실제로 시작 가능한 시각
+      var hand   = Math.abs(etaWs - ready);           // 핸드오프 어긋남
+      var cong   = predCongestion(w, b);
+      var resh   = predReshuffle(b, c);
+      rows.push({
+        block: b.id, bay: nextBay(b), armg: b.ws.id, agv: a.id, bx: b.x,
+        etaQc: etaQc, etaWs: etaWs, ready: ready, start: start, hand: hand,
+        cong: cong, resh: resh, deadhead: distM(a.x, qcX),
+        score: start + 1.0 * hand + 22 * cong
+             + SPEC.reshuffleRisk * resh + 0.015 * distM(a.x, qcX),
+      });
+    });
+  });
+  if (!rows.length) return null;
+
+  /* 기존 규칙 = TOS 가 지시한 위치 그대로, AGV 는 가장 가까운 유휴 */
+  var baseAgv = free.slice().sort(function (p, q) {
+    return Math.abs(p.x - qcX) - Math.abs(q.x - qcX);
+  })[0];
+  var basePick = rows.filter(function (r) {
+    return r.block === c.tos.block && r.agv === baseAgv.id;
+  })[0] || rows.filter(function (r) { return r.block === c.tos.block; })[0] || rows[0];
+
+  var aiPick = rows.slice().sort(function (p, q) { return p.score - q.score; })[0];
+
+  /* 블록별 최선 — 화면 표에 쓴다 */
+  var byBlock = {};
+  rows.forEach(function (r) {
+    if (!byBlock[r.block] || r.score < byBlock[r.block].score) byBlock[r.block] = r;
+  });
+  var cand = Object.keys(byBlock).map(function (k) { return byBlock[k]; })
+    .sort(function (p, q) { return p.score - q.score; });
+
+  return {
+    basePick: basePick, aiPick: aiPick, cand: cand,
+    agvCand: rows.filter(function (r) { return r.block === aiPick.block; })
+                 .sort(function (p, q) { return p.score - q.score; }).slice(0, 4),
+  };
+}
+
+/* ── 한 틱 ───────────────────────────────────────────────────── */
+function tick(w) {
+  w.t++;
+
+  /* QC 에서 컨테이너가 나오고, TOS 가 작업지시(WI_NEW)를 낸다 */
+  while (w.fi < w.feed.length && w.feed[w.fi].at <= w.t) {
+    var f = w.feed[w.fi++];
+    var c = { id: f.id, qc: f.qc, group: f.group, bornAt: w.t,
+              state: "WI", block: null, bay: null, agv: null, armg: null };
+    c.tos = tosAssign(w, c);
+    w.live.push(c);
+  }
+
+  /* 배차를 기다리는 컨테이너 — 여기서 AI 권고와 TOS 판단이 일어난다 */
+  w.live.forEach(function (c) {
+    if (c.state !== "WI") return;
+    var d = decide(w, c);
+    if (!d) { w.waitQc++; return; }
+
+    var pick = d.basePick, changed = false, accepted = null, rejectReason = null;
+
+    if (w.mode === "ai") {
+      changed = d.aiPick.block !== c.tos.block;
+      if (changed) {
+        w.advised++;
+        /* TOS 판단 — 내부 제약(위험물 격리·리퍼 전원 등)으로 거부할 수 있다.
+           난수가 아니라 고정 주기다. 거부해도 운영은 그대로 돈다. */
+        w.rejectTick++;
+        if (w.rejectTick % SPEC.tosRejectEvery === 0) {
+          accepted = false; w.rejected++;
+          rejectReason = "TOS 내부 제약 (위험물 격리·리퍼 전원·단적 제한)";
+          pick = d.basePick;
+        } else {
+          accepted = true; w.accepted++;
+          pick = d.aiPick;
+        }
+      } else {
+        pick = d.aiPick;          // 같은 위치 — 권고할 것이 없다
+      }
+    }
+
+    c.block = pick.block; c.bay = pick.bay; c.armg = pick.armg;
+    c.agv = pick.agv; c.state = "ASSIGNED"; c.slot = slotOf(pick.block, pick.bay);
+
+    var a = w.agvs.filter(function (x) { return x.id === c.agv; })[0];
+    var qcX = QC_X[c.qc];
+    a.state = "TO_QC"; a.task = c.id; a.target = qcX;
+    a.until = w.t + travelSec(a.x, qcX);
+    a.deadhead += distM(a.x, qcX);
+    w.deadheadM += distM(a.x, qcX);
+    if (pick.resh) w.reshuffle++;
+
+    var rec = {
+      t: w.t, c: c.id, qc: c.qc, group: c.group,
+      tosBlock: c.tos.block, tosSlot: slotOf(c.tos.block, c.tos.bay),
+      allowed: c.tos.allowed,
+      aiBlock: d.aiPick.block, aiSlot: slotOf(d.aiPick.block, d.aiPick.bay),
+      aiArmg: d.aiPick.armg, baseArmg: d.basePick.armg,
+      finalBlock: pick.block, finalSlot: c.slot, finalArmg: pick.armg,
+      gainSec: Math.round(d.basePick.score - d.aiPick.score),
+      changed: changed, accepted: accepted, rejectReason: rejectReason,
+      cand: d.cand, agvCand: d.agvCand, agv: pick.agv,
+    };
+    w.decisions.push(rec); w.lastDecision = rec;
+  });
+
+  /* AGV 진행 */
+  w.agvs.forEach(function (a) {
+    if (a.state === "IDLE") return;
+    var c = w.live.filter(function (x) { return x.id === a.task; })[0];
+    if (!c) { a.state = "IDLE"; a.task = null; return; }
+    var blk = w.blocks.filter(function (b) { return b.id === c.block; })[0];
+    var step = SPEC.agvMps / SPEC.apronM;
+
+    if (a.state === "TO_QC") {
+      a.x += Math.sign(a.target - a.x) * Math.min(Math.abs(a.target - a.x), step);
+      if (Math.abs(a.x - a.target) < 1e-4) {
+        a.x = a.target; a.state = "LOAD"; a.until = w.t + SPEC.qcPickSec;
+      }
+    } else if (a.state === "LOAD") {
+      if (w.t >= a.until) { a.state = "TO_WS"; a.target = blk.x; c.state = "ON_AGV"; }
+    } else if (a.state === "TO_WS") {
+      a.x += Math.sign(a.target - a.x) * Math.min(Math.abs(a.target - a.x), step);
+      if (Math.abs(a.x - a.target) < 1e-4) {
+        a.x = a.target; a.state = "AT_WS"; c.state = "AT_WSTP"; c.wsAt = w.t;
+        blk.queue.push(c.id);
+      }
+    } else if (a.state === "AT_WS") {
+      /* 해측 ARMG 가 받아 줄 때까지 AGV 는 묶여 있다 */
+      if (blk.queue[0] === c.id && w.t >= blk.ws.busyUntil) {
+        a.until = w.t + SPEC.wsDropSec; a.state = "DROP";
+        blk.ws.job = c.id;
+      } else { w.waitAgv++; }
+    } else if (a.state === "DROP") {
+      if (w.t >= a.until) {
+        blk.queue.shift();
+        blk.ws.bay = c.bay;
+        blk.ws.busyUntil = w.t + SPEC.armgBase + c.bay * SPEC.armgPerBay;
+        blk.stored++; blk.served++; blk.ws.served++;
+        c.state = "DONE"; c.doneAt = blk.ws.busyUntil;
+        w.cycleSum += (blk.ws.busyUntil - c.bornAt);
+        w.done.push(c);
+        w.live = w.live.filter(function (x) { return x.id !== c.id; });
+        a.state = "IDLE"; a.task = null;
+      }
+    }
+  });
+
+  /* 육측 전담 ARMG — 게이트(GI/GO) 작업. AI 판단 대상이 아니다 */
+  w.blocks.forEach(function (b) {
+    var ls = b.ls;
+    if (w.t >= ls.busyUntil) {
+      if ((w.t + ls.phase) % SPEC.gateCycleSec === 0) {
+        ls.busyUntil = w.t + SPEC.gateWorkSec;
+        ls.bay = SPEC.lsLo + ((ls.served * 7) % (SPEC.lsHi - SPEC.lsLo + 1));
+        ls.served++;
+      }
+    }
+  });
+
+  /* 해측 ARMG 가 놀고 있는데 받을 것이 없으면 그것도 손실 */
+  var pending = w.live.length > 0 || w.fi < w.feed.length;
+  if (pending) w.blocks.forEach(function (b) {
+    if (w.t >= b.ws.busyUntil && b.queue.length === 0) w.waitArmg++;
+  });
+
+  if (w.finishAt < 0 && w.fi >= w.feed.length && w.live.length === 0 &&
+      w.blocks.every(function (b) { return w.t >= b.ws.busyUntil; }))
+    w.finishAt = w.t;
+
+  return w;
+}
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var SIDS = Object.keys(SCENARIOS);
+  var sid = SIDS[0], B = null, A = null;
+  var playing = false, speed = 3, timer = null, maxT = 0;
+
+  function el(id) { return document.getElementById(id); }
+  function mmss(s) { return Math.floor(s / 60) + "분 " + (s % 60) + "초"; }
+
+  /* ── 시나리오 버튼 ───────────────────────────────────────── */
+  var sb = el("scens");
+  SIDS.forEach(function (k, i) {
+    var b = document.createElement("button");
+    b.textContent = SCENARIOS[k].name;
+    if (i === 0) b.className = "on";
+    b.onclick = function () {
+      sb.querySelectorAll("button").forEach(function (x) { x.className = ""; });
+      b.className = "on"; sid = k; reset();
+    };
+    sb.appendChild(b);
+  });
+
+  /* ── 블록 그림 만들기 (처음 한 번) ───────────────────────── */
+  function buildYard(pfx, w) {
+    var h = '<div class="quay"><span class="qcap">안벽</span>';
+    QC_X.forEach(function (x, i) {
+      h += '<span class="qc" id="' + pfx + 'qc' + i + '" style="left:' +
+           (x * 100) + '%">QC' + (i + 1) + '</span>';
+    });
+    h += '</div><div class="apron">';
+    w.agvs.forEach(function (a, i) {
+      h += '<span class="agv" id="' + pfx + 'agv' + i + '" style="left:' +
+           (a.x * 100) + '%"></span>';
+    });
+    h += '</div><div class="blocks">';
+    w.blocks.forEach(function (b, i) {
+      var bays = "";
+      for (var k = 0; k < SPEC.bays; k++) bays += '<div class="bay"></div>';
+      h += '<div class="blk g' + b.group + '" id="' + pfx + 'blk' + i + '">' +
+             '<div class="bhd">' + b.id +
+               '<span class="gchip">' + b.group + '</span></div>' +
+             '<div class="endb"></div>' +
+             '<div class="bwrap">' +
+               '<div class="rail l"></div><div class="rail r"></div>' +
+               '<div class="baycol" id="' + pfx + 'bay' + i + '">' + bays + '</div>' +
+               '<div class="armg l" id="' + pfx + 'ws' + i + '" title="해측 전담"></div>' +
+               '<div class="armg r gate" id="' + pfx + 'ls' + i + '" title="육측 전담"></div>' +
+             '</div>' +
+             '<div class="endb land"></div>' +
+             '<div class="bft" id="' + pfx + 'bft' + i + '"></div>' +
+           '</div>';
+    });
+    h += '</div><div class="ylegend">' +
+         '<span>가운데 띠 = 에이프런 · AGV ' + SPEC.agvs + '대</span>' +
+         '<span><i class="ws"></i>해측 전담 ARMG — 베이 ' + SPEC.wsLo + '~' + SPEC.wsHi +
+           ' · AI 권고가 사실상 고르는 대상</span>' +
+         '<span><i class="gt"></i>육측 전담 ARMG — 베이 ' + SPEC.lsLo + '~' + SPEC.lsHi +
+           ' · 게이트 작업 전담, AI 대상 아님</span></div>';
+    return h;
+  }
+
+  /* ── 매 프레임 갱신 ──────────────────────────────────────── */
+  function drawYard(pfx, w, dec) {
+    QC_X.forEach(function (x, i) {
+      var hot = w.live.some(function (c) { return c.qc === i && c.state === "WI"; });
+      el(pfx + "qc" + i).className = "qc" + (hot ? " hot" : "");
+    });
+    w.agvs.forEach(function (a, i) {
+      var n = el(pfx + "agv" + i);
+      n.style.left = (a.x * 100) + "%";
+      n.className = "agv" + (a.state === "IDLE" ? "" : " busy");
+    });
+    var span = SPEC.bays - 1;
+    w.blocks.forEach(function (b, i) {
+      var cell = el(pfx + "blk" + i), cls = "blk g" + b.group;
+      if (dec) {
+        if (dec.allowed.indexOf(b.id) >= 0) cls += " cand";
+        if (b.id === dec.tosBlock) cls += " tos";
+        if (pfx === "A" && dec.changed && dec.accepted && b.id === dec.finalBlock)
+          cls += " aipick";
+      }
+      cell.className = cls;
+
+      var ws = el(pfx + "ws" + i), ls = el(pfx + "ls" + i);
+      ws.style.top = ((b.ws.bay - 1) / span * 100) + "%";
+      ws.className = "armg l" + (w.t < b.ws.busyUntil ? " busy" : "");
+      ws.title = b.ws.id + " · 해측 전담 · 베이 " + b.ws.bay;
+      ls.style.top = ((b.ls.bay - 1) / span * 100) + "%";
+      ls.className = "armg r gate" + (w.t < b.ls.busyUntil ? " busy" : "");
+      ls.title = b.ls.id + " · 육측 전담 (게이트) · 베이 " + b.ls.bay;
+
+      var col = el(pfx + "bay" + i).children,
+          filled = Math.min(SPEC.bays, b.stored);
+      for (var k = 0; k < col.length; k++)
+        col[k].className = "bay" + (k < filled ? " f" : "");
+
+      el(pfx + "bft" + i).innerHTML =
+        '<b>' + b.served + '</b>' + (b.queue.length ? ' <span class="q">대기' +
+        b.queue.length + '</span>' : '');
+    });
+  }
+
+  function num(x) { return x.toLocaleString("ko-KR"); }
+
+  function drawSide(pfx, w, dec) {
+    drawYard(pfx, w, dec);
+    var total = w.feed.length, done = w.done.length;
+    el("n" + pfx).textContent = done;
+    el("t" + pfx).textContent = total;
+    el("f" + pfx).style.width = (total ? done / total * 100 : 0) + "%";
+    el("q" + pfx).textContent = num(w.waitQc) + "초";
+    el("a" + pfx).textContent = done ? Math.round(w.cycleSum / done) + "초" : "—";
+    el("e" + pfx).textContent = w.finishAt > 0 ? mmss(w.finishAt) : "—";
+    if (pfx === "B") el("rB").textContent = w.reshuffle;
+    else el("advA").textContent = w.advised + " / " + w.accepted;
+  }
+
+  /* ── 판단 카드 — TOS → AI → TOS 흐름 ─────────────────────── */
+  function drawChain(d) {
+    var n = el("chain");
+    if (!d) {
+      n.innerHTML = '<div style="font-size:12.5px;color:var(--ink3)">' +
+        '컨테이너가 내려오면 TOS 작업지시와 AI 권고가 여기에 표시됩니다.</div>';
+      return;
+    }
+    var h = '<div style="font-size:13px;margin-bottom:7px">' +
+      '<b style="font-size:14px">' + d.c + '</b>' +
+      ' <span style="color:var(--ink3)">· QC' + (d.qc + 1) +
+      ' · 출항그룹 ' + d.group + ' · 양하(DS)</span></div>';
+
+    h += '<div class="chain">';
+    h += '<span class="step tos"><span class="who">TOS</span>' +
+         '<span class="slot">' + d.tosSlot + '</span>' +
+         '<span class="msg">WI_NEW</span></span>';
+
+    if (!d.changed) {
+      h += '<span class="arrow">→</span>' +
+           '<span class="step ai"><span class="who">AI</span>같은 위치가 최선 — 권고 없음</span>';
+    } else {
+      h += '<span class="arrow">→</span>' +
+           '<span class="step ai"><span class="who">AI 권고</span>' +
+           '<span class="slot">' + d.aiSlot + '</span>' +
+           '<span class="msg">+' + Math.max(0, d.gainSec) + 's</span></span>';
+      h += '<span class="arrow">→</span>';
+      if (d.accepted) {
+        h += '<span class="step ok"><span class="who">TOS 수용</span>' +
+             '<span class="msg">WI_UPDATE</span></span>';
+      } else {
+        h += '<span class="step no"><span class="who">TOS 거부</span>' +
+             '원래 위치 유지</span>';
+      }
+    }
+    h += '<span class="arrow">→</span>' +
+         '<span class="step"><span class="who">수행</span>' + d.finalArmg +
+         '<span class="msg">J03-TODR</span></span>';
+    h += '</div>';
+
+    if (d.changed && !d.accepted)
+      h += '<div style="font-size:11.5px;color:var(--ink3);margin:-2px 0 7px">' +
+           d.rejectReason + ' — 운영은 그대로 진행됩니다.</div>';
+
+    h += '<table class="cand"><tr><th>후보 블록</th><th>해측 ARMG</th>' +
+         '<th>ARMG 가용</th><th>AGV 도착</th><th>어긋남</th><th>혼잡</th><th>재취급</th></tr>';
+    d.cand.slice(0, 4).forEach(function (r, ri) {
+      var win = r.block === d.aiBlock, tos = r.block === d.tosBlock;
+      var cls = win ? "win" : (tos ? "" : "dim");
+      if (ri === 3 && !win && !tos) cls += " hideSm";
+      h += '<tr class="' + cls + '"><td>' + r.block +
+        (tos ? '<span class="mini t">TOS</span>' : '') +
+        (win ? '<span class="mini a">AI</span>' : '') + '</td>' +
+        '<td>' + r.armg + '</td>' +
+        '<td>' + rel(r.ready, d.t) + '</td>' +
+        '<td>' + rel(r.etaWs, d.t) + '</td>' +
+        '<td>' + Math.round(r.hand) + '초</td>' +
+        '<td>' + r.cong.toFixed(1) + '</td>' +
+        '<td>' + (r.resh ? "있음" : "없음") + '</td></tr>';
+    });
+    h += '</table>';
+    h += '<div class="models"><span>P1 해측 ARMG 가용시각</span>' +
+         '<span>P2 대기열 소진</span><span>P3 AGV 도착 예측</span>' +
+         '<span>P4 블록 혼잡 예보</span><span>P5 재취급 위험</span>' +
+         '<span>AGV 짝짓기 — ' + d.agv + '</span></div>';
+    n.innerHTML = h;
+  }
+
+  function rel(v, base) {
+    var d = Math.round(v - base);
+    return d <= 0 ? "즉시" : d + "초";
+  }
+
+  /* ── 누적 비교 ───────────────────────────────────────────── */
+  function avg(w) { return w.done.length ? Math.round(w.cycleSum / w.done.length) : 0; }
+  function drawRank() {
+    var rows = [
+      ["처리 완료", B.done.length, A.done.length, B.feed.length, "건", "hideSm"],
+      ["안벽 대기", B.waitQc, A.waitQc, Math.max(B.waitQc, A.waitQc, 1), "초"],
+      ["1건당 평균", avg(B), avg(A), Math.max(avg(B), avg(A), 1), "초"],
+    ];
+    if (B.finishAt > 0 && A.finishAt > 0)
+      rows.push(["전건 완료", B.finishAt, A.finishAt,
+                 Math.max(B.finishAt, A.finishAt, 1), "초"]);
+    var h = "";
+    rows.forEach(function (r) {
+      var hid = r[5] ? " " + r[5] : "";
+      h += '<div class="rrow' + hid + '"><span class="rlab">' + r[0] + '</span>' +
+           '<span class="rtrack"><span class="rfill" style="background:var(--before);width:' +
+           (r[1] / r[3] * 100) + '%"></span></span>' +
+           '<span class="rval">' + num(r[1]) + r[4] + '</span></div>' +
+           '<div class="rrow' + hid + '"><span class="rlab"></span>' +
+           '<span class="rtrack"><span class="rfill" style="background:var(--after);width:' +
+           (r[2] / r[3] * 100) + '%"></span></span>' +
+           '<span class="rval">' + num(r[2]) + r[4] + '</span></div>';
+    });
+    h += '<div style="margin-top:7px;display:flex;gap:7px;align-items:center">' +
+         '<span class="chip b">AI 미적용</span><span class="chip a">권고 반영</span>' +
+         '<span style="font-size:11px;color:var(--ink3);margin-left:auto">' +
+         '위치변경 권고 ' + A.advised + ' · 수용 ' + A.accepted +
+         ' · 거부 ' + A.rejected + '</span></div>';
+    el("rank").innerHTML = h;
+  }
+
+  function drawCap() {
+    var d = A.lastDecision;
+    if (d && d.changed && d.accepted)
+      el("cap").innerHTML = '방금 <b>적재위치가 바뀌었습니다</b> — ' +
+        d.tosBlock + ' 에서 ' + d.finalBlock + ' 으로. TOS 가 수용했습니다.';
+    else if (d && d.changed && !d.accepted)
+      el("cap").innerHTML = 'AI 가 권고했으나 <b>TOS 가 거부</b>했습니다 — 원래 위치로 진행합니다.';
+    else
+      el("cap").innerHTML = '같은 컨테이너가 두 쪽에 동시에 들어갑니다. ' +
+        '다른 것은 <b>적재위치를 바꿀 것인가</b> 하나뿐입니다.';
+  }
+
+  /* ── 루프 ────────────────────────────────────────────────── */
+  function reset() {
+    B = makeWorld("base", sid); A = makeWorld("ai", sid);
+    el("yardB").innerHTML = buildYard("B", B);
+    el("yardA").innerHTML = buildYard("A", A);
+    maxT = 0; el("seek").value = 0;
+    render();
+  }
+
+  function estDuration() {
+    var last = B.feed.length ? B.feed[B.feed.length - 1].at : 600;
+    return Math.max(B.finishAt > 0 ? B.finishAt : 0,
+                    A.finishAt > 0 ? A.finishAt : 0, last + 420);
+  }
+  function render() {
+    var d = A.lastDecision;
+    drawSide("B", B, d);
+    drawSide("A", A, d);
+    drawChain(d); drawRank(); drawCap();
+    el("clock").textContent = mmss(A.t);
+    el("seek").value = Math.min(100, A.t / estDuration() * 100);
+  }
+
+  function step() {
+    for (var i = 0; i < speed; i++) {
+      if (B.finishAt < 0) tick(B);
+      if (A.finishAt < 0) tick(A);
+    }
+    if (B.finishAt > 0 && A.finishAt > 0) pause();
+    render();
+  }
+
+  function play() { if (playing) return; playing = true; timer = setInterval(step, 60); }
+  function pause() { playing = false; clearInterval(timer); }
+
+  el("bGo").onclick = play;
+  el("bPause").onclick = pause;
+  el("bReset").onclick = function () { pause(); reset(); };
+  document.querySelectorAll("[data-sp]").forEach(function (b) {
+    b.onclick = function () {
+      document.querySelectorAll("[data-sp]").forEach(function (x) { x.className = ""; });
+      b.className = "on"; speed = +b.dataset.sp;
+    };
+  });
+  el("seek").oninput = function () {
+    pause();
+    var target = Math.round(this.value / 100 * estDuration());
+    B = makeWorld("base", sid); A = makeWorld("ai", sid);
+    for (var i = 0; i < target; i++) { tick(B); tick(A); }
+    render();
+  };
+
+  el("note").innerHTML =
+    '<b>이 화면은 2차 설계안의 개념 시연입니다.</b> 적재위치(블록·베이·슬롯)는 ' +
+    '<b>TOS</b> 의 권한이고 AGV 개체 지정은 <b>FMS</b> 의 권한입니다. AI 는 ' +
+    'TOS 가 허용한 후보 슬롯 안에서 더 나은 위치를 계산해 <b>권고만</b> 합니다 — ' +
+    'TOS 가 거부하면 원래 위치로 그대로 진행됩니다. 반영 경로는 ' +
+    '<b>ECS→TOS 권고 메시지(신설 필요)</b> + 기존 <b>CM-JS001 / WI_UPDATE</b> 입니다. ' +
+    '1차 배포본의 AI Pilot(AI-P01/0.2)은 응답에 슬롯 필드가 없어 이 권고를 표현할 수 ' +
+    '없습니다 — <b>AI-P02 확장이 선행 조건</b>입니다. 수치는 가정 제원 위에서 돌린 ' +
+    '모델값이고 실측이 아닙니다. <b>성과 수치로 인용하지 마십시오.</b>';
+
+  reset();
+})();
+</script>
+</body>
+</html>
